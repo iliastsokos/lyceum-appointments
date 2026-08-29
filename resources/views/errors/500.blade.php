@@ -1,5 +1,5 @@
 @include('errors.minimal', [
     'code' => 500,
-    'title' => __('Something went wrong'),
-    'message' => __("We're sorry, an unexpected error occurred. Please try again in a moment."),
+    'title' => __('Κάτι πήγε στραβά'),
+    'message' => __('Λυπούμαστε, προέκυψε ένα απρόσμενο σφάλμα. Παρακαλούμε δοκιμάστε ξανά σε λίγο.'),
 ])

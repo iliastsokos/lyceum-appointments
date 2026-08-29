@@ -18,8 +18,8 @@ class ImportHistoryTest extends TestCase
 
         $this->actingAs($admin)->get(route('admin.imports.index'))
             ->assertOk()
-            ->assertSee('Import Teachers')
-            ->assertSee('Import Guardians');
+            ->assertSee('Εισαγωγή Εκπαιδευτικών')
+            ->assertSee('Εισαγωγή Κηδεμόνων');
     }
 
     public function test_admin_can_view_import_history_list(): void

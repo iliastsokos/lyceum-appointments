@@ -127,30 +127,30 @@ class ExcelImportService
             $subject = $raw['subject'] ?? '';
 
             if ($firstName === '') {
-                $errors['first_name'] = 'Required';
+                $errors['first_name'] = 'Υποχρεωτικό';
             }
             if ($lastName === '') {
-                $errors['last_name'] = 'Required';
+                $errors['last_name'] = 'Υποχρεωτικό';
             }
 
             if ($email === '') {
-                $errors['email'] = 'Required';
+                $errors['email'] = 'Υποχρεωτικό';
             } elseif (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
-                $errors['email'] = 'Invalid email';
+                $errors['email'] = 'Μη έγκυρο email';
             } elseif (isset($seenEmails[$email])) {
-                $errors['email'] = 'Duplicate';
+                $errors['email'] = 'Διπλότυπο';
             } else {
                 $seenEmails[$email] = true;
             }
 
             if ($role === '') {
-                $errors['role'] = 'Required';
+                $errors['role'] = 'Υποχρεωτικό';
             } elseif ($role !== 'teacher') {
-                $errors['role'] = 'Invalid role';
+                $errors['role'] = 'Μη έγκυρος ρόλος';
             }
 
             if ($subject === '') {
-                $errors['subject'] = 'Required';
+                $errors['subject'] = 'Υποχρεωτικό';
             }
 
             return [
@@ -169,7 +169,7 @@ class ExcelImportService
             if ($row['status'] === 'pending') {
                 if (isset($existingEmails[$row['data']['email']])) {
                     $row['status'] = 'skip';
-                    $row['skip_reason'] = 'Existing account';
+                    $row['skip_reason'] = 'Υπάρχων λογαριασμός';
                 } else {
                     $row['status'] = 'valid';
                 }
@@ -201,29 +201,29 @@ class ExcelImportService
             $childClass = Str::upper($raw['child_class'] ?? '');
 
             if ($guardianFirstName === '') {
-                $errors['guardian_first_name'] = 'Required';
+                $errors['guardian_first_name'] = 'Υποχρεωτικό';
             }
             if ($guardianLastName === '') {
-                $errors['guardian_last_name'] = 'Required';
+                $errors['guardian_last_name'] = 'Υποχρεωτικό';
             }
 
             if ($guardianEmail === '') {
-                $errors['guardian_email'] = 'Required';
+                $errors['guardian_email'] = 'Υποχρεωτικό';
             } elseif (! filter_var($guardianEmail, FILTER_VALIDATE_EMAIL)) {
-                $errors['guardian_email'] = 'Invalid email';
+                $errors['guardian_email'] = 'Μη έγκυρο email';
             }
 
             if ($childFirstName === '') {
-                $errors['child_first_name'] = 'Required';
+                $errors['child_first_name'] = 'Υποχρεωτικό';
             }
             if ($childLastName === '') {
-                $errors['child_last_name'] = 'Required';
+                $errors['child_last_name'] = 'Υποχρεωτικό';
             }
 
             if ($childClass === '') {
-                $errors['child_class'] = 'Required';
+                $errors['child_class'] = 'Υποχρεωτικό';
             } elseif (! in_array($childClass, $validClasses, true)) {
-                $errors['child_class'] = 'Invalid class';
+                $errors['child_class'] = 'Μη έγκυρη τάξη';
             }
 
             return [
@@ -242,7 +242,7 @@ class ExcelImportService
             if ($row['status'] === 'pending') {
                 if (isset($existingEmails[$row['data']['guardianEmail']])) {
                     $row['status'] = 'skip';
-                    $row['skip_reason'] = 'Existing guardian account';
+                    $row['skip_reason'] = 'Υπάρχων λογαριασμός κηδεμόνα';
                 } else {
                     $row['status'] = 'valid';
                 }

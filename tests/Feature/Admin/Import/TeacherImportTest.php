@@ -57,10 +57,10 @@ class TeacherImportTest extends TestCase
         $response = $this->actingAs($admin)->post(route('admin.imports.commit', 'teachers'), ['token' => $token]);
 
         $response->assertOk();
-        $response->assertSee('Import completed.');
-        $response->assertSee('1 rows processed');
-        $response->assertSee('1 accounts created');
-        $response->assertSee('Download Temporary Passwords');
+        $response->assertSee('Η εισαγωγή ολοκληρώθηκε.');
+        $response->assertSee('1 γραμμές επεξεργάστηκαν');
+        $response->assertSee('1 λογαριασμοί δημιουργήθηκαν');
+        $response->assertSee('Λήψη Προσωρινών Κωδικών');
 
         $teacher = User::where('email', 'maria@example.gr')->firstOrFail();
         $this->assertSame(UserRole::Teacher, $teacher->role);
@@ -87,7 +87,7 @@ class TeacherImportTest extends TestCase
         $rows = $response->viewData('rows');
         $this->assertSame(1, $response->viewData('summary')['valid']);
         $this->assertSame(1, $response->viewData('summary')['error']);
-        $this->assertSame('Duplicate', $rows->firstWhere('status', 'error')['errors']['email']);
+        $this->assertSame('Διπλότυπο', $rows->firstWhere('status', 'error')['errors']['email']);
     }
 
     public function test_existing_teacher_account_is_skipped_not_overwritten(): void
@@ -125,7 +125,7 @@ class TeacherImportTest extends TestCase
         $response = $this->actingAs($admin)->post(route('admin.imports.preview', 'teachers'), ['file' => $file]);
 
         $rows = $response->viewData('rows');
-        $this->assertSame('Invalid email', $rows->first()['errors']['email']);
+        $this->assertSame('Μη έγκυρο email', $rows->first()['errors']['email']);
     }
 
     public function test_invalid_role_is_rejected(): void
@@ -138,7 +138,7 @@ class TeacherImportTest extends TestCase
         $response = $this->actingAs($admin)->post(route('admin.imports.preview', 'teachers'), ['file' => $file]);
 
         $rows = $response->viewData('rows');
-        $this->assertSame('Invalid role', $rows->first()['errors']['role']);
+        $this->assertSame('Μη έγκυρος ρόλος', $rows->first()['errors']['role']);
     }
 
     public function test_missing_required_field_is_reported(): void
@@ -151,7 +151,7 @@ class TeacherImportTest extends TestCase
         $response = $this->actingAs($admin)->post(route('admin.imports.preview', 'teachers'), ['file' => $file]);
 
         $rows = $response->viewData('rows');
-        $this->assertSame('Required', $rows->first()['errors']['first_name']);
+        $this->assertSame('Υποχρεωτικό', $rows->first()['errors']['first_name']);
     }
 
     public function test_malformed_file_missing_columns_is_rejected_before_row_processing(): void

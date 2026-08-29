@@ -10,8 +10,8 @@ enum ImportType: string
     public function label(): string
     {
         return match ($this) {
-            self::Teachers => 'Teachers',
-            self::Guardians => 'Guardians',
+            self::Teachers => 'Εκπαιδευτικοί',
+            self::Guardians => 'Κηδεμόνες',
         };
     }
 }

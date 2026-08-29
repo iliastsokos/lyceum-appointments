@@ -1,5 +1,5 @@
 @include('errors.minimal', [
     'code' => 404,
-    'title' => __('Page not found'),
-    'message' => __("The page you're looking for doesn't exist or may have been moved."),
+    'title' => __('Η σελίδα δεν βρέθηκε'),
+    'message' => __('Η σελίδα που αναζητάτε δεν υπάρχει ή μπορεί να έχει μετακινηθεί.'),
 ])

@@ -12,10 +12,10 @@ enum AppointmentStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::New => 'New',
-            self::Confirmed => 'Confirmed',
-            self::Cancelled => 'Cancelled',
-            self::Completed => 'Completed',
+            self::New => 'Νέο',
+            self::Confirmed => 'Επιβεβαιωμένο',
+            self::Cancelled => 'Ακυρωμένο',
+            self::Completed => 'Ολοκληρωμένο',
         };
     }
 }

@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Teachers') }}
+            {{ __('Εκπαιδευτικοί') }}
         </h2>
     </x-slot>
 
@@ -10,23 +10,23 @@
 
             @if (session('status') === 'teacher-created' && session('temporaryPassword'))
                 <div class="bg-yellow-50 border border-yellow-300 text-yellow-900 rounded-md p-4 text-sm">
-                    {{ __('Teacher account created. Temporary password (share this securely, it will not be shown again):') }}
+                    {{ __('Ο λογαριασμός εκπαιδευτικού δημιουργήθηκε. Προσωρινός κωδικός (μοιραστείτε τον με ασφάλεια, δεν θα εμφανιστεί ξανά):') }}
                     <span class="font-mono font-semibold">{{ session('temporaryPassword') }}</span>
                 </div>
             @elseif (session('status'))
                 <div class="bg-green-50 border border-green-300 text-green-900 rounded-md p-4 text-sm">
-                    {{ __('Done.') }}
+                    {{ __('Ολοκληρώθηκε.') }}
                 </div>
             @endif
 
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <form method="GET" class="flex gap-2">
-                        <x-text-input type="search" name="search" value="{{ request('search') }}" placeholder="{{ __('Search teachers...') }}" class="w-64" />
-                        <x-secondary-button type="submit">{{ __('Search') }}</x-secondary-button>
+                        <x-text-input type="search" name="search" value="{{ request('search') }}" placeholder="{{ __('Αναζήτηση εκπαιδευτικών...') }}" class="w-64" />
+                        <x-secondary-button type="submit">{{ __('Αναζήτηση') }}</x-secondary-button>
                     </form>
                     <a href="{{ route('admin.teachers.create') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700">
-                        {{ __('Add Teacher') }}
+                        {{ __('Προσθήκη Εκπαιδευτικού') }}
                     </a>
                 </div>
 
@@ -34,10 +34,10 @@
                     <table class="min-w-full divide-y divide-gray-200 text-sm">
                         <thead>
                             <tr class="text-left text-gray-500">
-                                <th class="py-2 pr-4">{{ __('Name') }}</th>
+                                <th class="py-2 pr-4">{{ __('Όνομα') }}</th>
                                 <th class="py-2 pr-4">{{ __('Email') }}</th>
-                                <th class="py-2 pr-4">{{ __('Subject') }}</th>
-                                <th class="py-2 pr-4">{{ __('Status') }}</th>
+                                <th class="py-2 pr-4">{{ __('Μάθημα') }}</th>
+                                <th class="py-2 pr-4">{{ __('Κατάσταση') }}</th>
                                 <th class="py-2 pr-4"></th>
                             </tr>
                         </thead>
@@ -53,19 +53,19 @@
                                         </span>
                                     </td>
                                     <td class="py-3 pr-4 text-right space-x-3">
-                                        <a href="{{ route('admin.teachers.edit', $teacher) }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Edit') }}</a>
+                                        <a href="{{ route('admin.teachers.edit', $teacher) }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Επεξεργασία') }}</a>
                                         <form method="POST" action="{{ route('admin.teachers.toggle-status', $teacher) }}" class="inline">
                                             @csrf
                                             @method('PATCH')
                                             <button type="submit" class="text-gray-600 hover:text-gray-900">
-                                                {{ $teacher->status->value === 'active' ? __('Deactivate') : __('Activate') }}
+                                                {{ $teacher->status->value === 'active' ? __('Απενεργοποίηση') : __('Ενεργοποίηση') }}
                                             </button>
                                         </form>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="5" class="py-6 text-center text-gray-500">{{ __('No teachers found.') }}</td>
+                                    <td colspan="5" class="py-6 text-center text-gray-500">{{ __('Δεν βρέθηκαν εκπαιδευτικοί.') }}</td>
                                 </tr>
                             @endforelse
                         </tbody>

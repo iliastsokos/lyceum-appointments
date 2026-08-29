@@ -1,5 +1,5 @@
 @include('errors.minimal', [
     'code' => 429,
-    'title' => __('Too many requests'),
-    'message' => __('Please wait a moment before trying again.'),
+    'title' => __('Πάρα πολλά αιτήματα'),
+    'message' => __('Παρακαλούμε περιμένετε λίγο πριν δοκιμάσετε ξανά.'),
 ])

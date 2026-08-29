@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Import History') }}
+            {{ __('Ιστορικό Εισαγωγών') }}
         </h2>
     </x-slot>
 
@@ -11,14 +11,14 @@
                 <table class="min-w-full divide-y divide-gray-200 text-sm">
                     <thead>
                         <tr class="text-left text-gray-500">
-                            <th class="py-2 pr-4">{{ __('Date') }}</th>
-                            <th class="py-2 pr-4">{{ __('Type') }}</th>
-                            <th class="py-2 pr-4">{{ __('File') }}</th>
-                            <th class="py-2 pr-4">{{ __('Admin') }}</th>
-                            <th class="py-2 pr-4">{{ __('Total') }}</th>
-                            <th class="py-2 pr-4">{{ __('Created') }}</th>
-                            <th class="py-2 pr-4">{{ __('Skipped') }}</th>
-                            <th class="py-2 pr-4">{{ __('Failed') }}</th>
+                            <th class="py-2 pr-4">{{ __('Ημερομηνία') }}</th>
+                            <th class="py-2 pr-4">{{ __('Τύπος') }}</th>
+                            <th class="py-2 pr-4">{{ __('Αρχείο') }}</th>
+                            <th class="py-2 pr-4">{{ __('Διαχειριστής') }}</th>
+                            <th class="py-2 pr-4">{{ __('Σύνολο') }}</th>
+                            <th class="py-2 pr-4">{{ __('Δημιουργήθηκαν') }}</th>
+                            <th class="py-2 pr-4">{{ __('Παραλείφθηκαν') }}</th>
+                            <th class="py-2 pr-4">{{ __('Απέτυχαν') }}</th>
                             <th class="py-2 pr-4"></th>
                         </tr>
                     </thead>
@@ -34,12 +34,12 @@
                                 <td class="py-2 pr-4">{{ $batch->skipped_rows }}</td>
                                 <td class="py-2 pr-4">{{ $batch->failed_rows }}</td>
                                 <td class="py-2 pr-4">
-                                    <a href="{{ route('admin.imports.history.show', $batch) }}" class="text-indigo-600 hover:text-indigo-900">{{ __('View') }}</a>
+                                    <a href="{{ route('admin.imports.history.show', $batch) }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Προβολή') }}</a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="9" class="py-6 text-center text-gray-500">{{ __('No imports yet.') }}</td>
+                                <td colspan="9" class="py-6 text-center text-gray-500">{{ __('Δεν υπάρχουν εισαγωγές ακόμα.') }}</td>
                             </tr>
                         @endforelse
                     </tbody>

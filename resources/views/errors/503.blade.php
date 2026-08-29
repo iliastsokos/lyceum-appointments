@@ -1,5 +1,5 @@
 @include('errors.minimal', [
     'code' => 503,
-    'title' => __('Down for maintenance'),
-    'message' => __('The application is temporarily unavailable while we perform maintenance. Please check back shortly.'),
+    'title' => __('Εκτός λειτουργίας για συντήρηση'),
+    'message' => __('Η εφαρμογή είναι προσωρινά μη διαθέσιμη λόγω συντήρησης. Παρακαλούμε επισκεφθείτε ξανά σύντομα.'),
 ])

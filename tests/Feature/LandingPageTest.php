@@ -15,11 +15,11 @@ class LandingPageTest extends TestCase
         $response->assertSee('Ραντεβού');
     }
 
-    public function test_landing_page_links_to_login_and_registration(): void
+    public function test_landing_page_links_to_login_and_not_to_registration(): void
     {
         $response = $this->get('/');
 
         $response->assertSee(route('login'), false);
-        $response->assertSee(route('register'), false);
+        $response->assertDontSee('/register', false);
     }
 }

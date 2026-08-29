@@ -3,7 +3,7 @@
     'method' => 'POST',
     'title',
     'message',
-    'confirmText' => __('Confirm'),
+    'confirmText' => __('Επιβεβαίωση'),
     'buttonClass' => 'text-sm text-red-600 hover:text-red-900',
     'confirmButtonClass' => 'inline-flex items-center px-4 py-2 bg-red-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2',
 ])
@@ -44,7 +44,7 @@
 
                 <div class="mt-6 flex items-center justify-end gap-4">
                     <button type="button" x-ref="cancelBtn" x-on:click="open = false" class="text-sm text-gray-600 hover:text-gray-900">
-                        {{ __('Cancel') }}
+                        {{ __('Ακύρωση') }}
                     </button>
                     <form method="POST" action="{{ $action }}">
                         @csrf

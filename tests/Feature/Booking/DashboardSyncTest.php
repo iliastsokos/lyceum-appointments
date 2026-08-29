@@ -73,13 +73,13 @@ class DashboardSyncTest extends TestCase
 
         // Guardian's list now shows it as cancelled, and slot is bookable again.
         $this->actingAs($guardian)->get(route('guardian.appointments.index'))
-            ->assertSee('Cancelled');
+            ->assertSee('Ακυρωμένο');
 
         $this->assertSame(SlotStatus::Available, $appointment->slot->fresh()->status);
 
         // Teacher no longer sees it under today's active appointments (it is cancelled).
         $this->actingAs($teacher)->get(route('teacher.appointments.index'))
             ->assertSee($child->full_name)
-            ->assertSee('Cancelled');
+            ->assertSee('Ακυρωμένο');
     }
 }

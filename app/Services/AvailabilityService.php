@@ -27,11 +27,11 @@ class AvailabilityService
         $end = Carbon::createFromFormat('Y-m-d H:i', "{$date} {$endTime}");
 
         if ($day->lt(today())) {
-            throw ValidationException::withMessages(['date' => 'You cannot create availability in the past.']);
+            throw ValidationException::withMessages(['date' => 'Δεν μπορείτε να δημιουργήσετε διαθεσιμότητα στο παρελθόν.']);
         }
 
         if ($start->diffInMinutes($end) % self::SLOT_MINUTES !== 0) {
-            throw ValidationException::withMessages(['end_time' => 'The availability window must be a multiple of 5 minutes.']);
+            throw ValidationException::withMessages(['end_time' => 'Το εύρος διαθεσιμότητας πρέπει να είναι πολλαπλάσιο των 5 λεπτών.']);
         }
 
         return DB::transaction(function () use ($teacher, $day, $start, $end) {
@@ -44,7 +44,7 @@ class AvailabilityService
                 ->exists();
 
             if ($overlaps) {
-                throw ValidationException::withMessages(['start_time' => 'This overlaps with an existing availability window on the same day.']);
+                throw ValidationException::withMessages(['start_time' => 'Αυτό επικαλύπτεται με υπάρχον διάστημα διαθεσιμότητας την ίδια ημέρα.']);
             }
 
             $availability = Availability::create([
@@ -92,7 +92,7 @@ class AvailabilityService
 
             if ($hasBookedSlots) {
                 throw ValidationException::withMessages([
-                    'availability' => 'This availability window has booked appointments and cannot be removed. Cancel the appointments first.',
+                    'availability' => 'Αυτό το διάστημα διαθεσιμότητας έχει κλεισμένα ραντεβού και δεν μπορεί να αφαιρεθεί. Ακυρώστε πρώτα τα ραντεβού.',
                 ]);
             }
 
@@ -113,7 +113,7 @@ class AvailabilityService
 
             if ($locked->status === SlotStatus::Booked) {
                 throw ValidationException::withMessages([
-                    'slot' => 'A booked slot cannot be disabled. Cancel the appointment first.',
+                    'slot' => 'Μια κλεισμένη ώρα δεν μπορεί να απενεργοποιηθεί. Ακυρώστε πρώτα το ραντεβού.',
                 ]);
             }
 

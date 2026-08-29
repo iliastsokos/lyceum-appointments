@@ -240,7 +240,10 @@ class AvailabilityManagementTest extends TestCase
 
         $response = $this->actingAs($teacherA)->get(route('teacher.availability.index'));
 
-        $response->assertSee('10:00');
-        $response->assertDontSee('11:00');
+        // Bare time strings like "10:00" also appear as options in the
+        // create-availability time dropdown, so assert on the full rendered
+        // range from the "upcoming availability" list instead.
+        $response->assertSee('10:00–10:05');
+        $response->assertDontSee('11:00–11:05');
     }
 }

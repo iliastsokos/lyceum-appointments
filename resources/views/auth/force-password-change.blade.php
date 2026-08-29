@@ -1,6 +1,6 @@
 <x-guest-layout>
     <div class="mb-4 text-sm text-gray-600">
-        {{ __('Your account was created by the school administration with a temporary password. Please choose a new password to continue.') }}
+        {{ __('Ο λογαριασμός σας δημιουργήθηκε από τη Διεύθυνση του σχολείου με προσωρινό κωδικό. Παρακαλούμε επιλέξτε νέο κωδικό για να συνεχίσετε.') }}
     </div>
 
     <form method="POST" action="{{ route('password.force-change.update') }}">
@@ -8,7 +8,7 @@
         @method('PUT')
 
         <div>
-            <x-input-label for="password" :value="__('New password')" />
+            <x-input-label for="password" :value="__('Νέος κωδικός')" />
             <x-text-input id="password" class="block mt-1 w-full"
                             type="password"
                             name="password"
@@ -17,7 +17,7 @@
         </div>
 
         <div class="mt-4">
-            <x-input-label for="password_confirmation" :value="__('Confirm new password')" />
+            <x-input-label for="password_confirmation" :value="__('Επιβεβαίωση νέου κωδικού')" />
             <x-text-input id="password_confirmation" class="block mt-1 w-full"
                             type="password"
                             name="password_confirmation"
@@ -27,7 +27,7 @@
 
         <div class="flex items-center justify-end mt-4">
             <x-primary-button>
-                {{ __('Set password') }}
+                {{ __('Ορισμός κωδικού') }}
             </x-primary-button>
         </div>
     </form>

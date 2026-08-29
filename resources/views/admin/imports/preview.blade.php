@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Preview Import: :type', ['type' => $type->label()]) }}
+            {{ __('Προεπισκόπηση Εισαγωγής: :type', ['type' => $type->label()]) }}
         </h2>
     </x-slot>
 
@@ -12,25 +12,25 @@
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
                     <div>
                         <div class="text-2xl font-semibold text-gray-900">{{ $summary['total'] }}</div>
-                        <div class="text-xs text-gray-500 uppercase tracking-wide">{{ __('Rows detected') }}</div>
+                        <div class="text-xs text-gray-500 uppercase tracking-wide">{{ __('Γραμμές που βρέθηκαν') }}</div>
                     </div>
                     <div>
                         <div class="text-2xl font-semibold text-green-700">{{ $summary['valid'] }}</div>
-                        <div class="text-xs text-gray-500 uppercase tracking-wide">{{ __('Valid') }}</div>
+                        <div class="text-xs text-gray-500 uppercase tracking-wide">{{ __('Έγκυρες') }}</div>
                     </div>
                     <div>
                         <div class="text-2xl font-semibold text-yellow-700">{{ $summary['skip'] }}</div>
-                        <div class="text-xs text-gray-500 uppercase tracking-wide">{{ __('Existing (skipped)') }}</div>
+                        <div class="text-xs text-gray-500 uppercase tracking-wide">{{ __('Υπάρχουσες (θα παραλειφθούν)') }}</div>
                     </div>
                     <div>
                         <div class="text-2xl font-semibold text-red-700">{{ $summary['error'] }}</div>
-                        <div class="text-xs text-gray-500 uppercase tracking-wide">{{ __('Errors') }}</div>
+                        <div class="text-xs text-gray-500 uppercase tracking-wide">{{ __('Σφάλματα') }}</div>
                     </div>
                 </div>
 
                 @if ($type->value === 'guardians')
                     <p class="mt-4 text-sm text-gray-600 text-center">
-                        {{ __(':new new guardian account(s), :existing existing guardian(s) detected.', ['new' => $summary['guardians_new'], 'existing' => $summary['guardians_existing']]) }}
+                        {{ __(':new νέοι λογαριασμοί κηδεμόνων, :existing υπάρχοντες κηδεμόνες εντοπίστηκαν.', ['new' => $summary['guardians_new'], 'existing' => $summary['guardians_existing']]) }}
                     </p>
                 @endif
 
@@ -44,23 +44,23 @@
                 >
                     @csrf
                     <input type="hidden" name="token" value="{{ $token }}" />
-                    <a href="{{ route('admin.imports.show', $type->value) }}" class="text-sm text-gray-600 hover:text-gray-900">{{ __('Cancel') }}</a>
+                    <a href="{{ route('admin.imports.show', $type->value) }}" class="text-sm text-gray-600 hover:text-gray-900">{{ __('Ακύρωση') }}</a>
                     <x-primary-button x-bind:disabled="submitting || {{ $nothingToImport ? 'true' : 'false' }}">
-                        <span x-show="!submitting">{{ __('Confirm Import') }}</span>
-                        <span x-show="submitting" x-cloak>{{ __('Importing...') }}</span>
+                        <span x-show="!submitting">{{ __('Επιβεβαίωση Εισαγωγής') }}</span>
+                        <span x-show="submitting" x-cloak>{{ __('Γίνεται εισαγωγή...') }}</span>
                     </x-primary-button>
                 </form>
             </div>
 
             @if ($summary['error'] > 0)
                 <div class="bg-white shadow-sm sm:rounded-lg p-6 overflow-x-auto">
-                    <h3 class="text-sm font-medium text-gray-900 mb-4">{{ __('Errors') }}</h3>
+                    <h3 class="text-sm font-medium text-gray-900 mb-4">{{ __('Σφάλματα') }}</h3>
                     <table class="min-w-full divide-y divide-gray-200 text-sm">
                         <thead>
                             <tr class="text-left text-gray-500">
-                                <th class="py-2 pr-4">{{ __('Row') }}</th>
-                                <th class="py-2 pr-4">{{ __('Field') }}</th>
-                                <th class="py-2 pr-4">{{ __('Error') }}</th>
+                                <th class="py-2 pr-4">{{ __('Γραμμή') }}</th>
+                                <th class="py-2 pr-4">{{ __('Πεδίο') }}</th>
+                                <th class="py-2 pr-4">{{ __('Σφάλμα') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
@@ -80,11 +80,11 @@
 
             @if ($summary['skip'] > 0)
                 <div class="bg-white shadow-sm sm:rounded-lg p-6 overflow-x-auto">
-                    <h3 class="text-sm font-medium text-gray-900 mb-4">{{ __('Existing accounts (will be skipped)') }}</h3>
+                    <h3 class="text-sm font-medium text-gray-900 mb-4">{{ __('Υπάρχοντες λογαριασμοί (θα παραλειφθούν)') }}</h3>
                     <table class="min-w-full divide-y divide-gray-200 text-sm">
                         <thead>
                             <tr class="text-left text-gray-500">
-                                <th class="py-2 pr-4">{{ __('Row') }}</th>
+                                <th class="py-2 pr-4">{{ __('Γραμμή') }}</th>
                                 <th class="py-2 pr-4">{{ __('Email') }}</th>
                             </tr>
                         </thead>

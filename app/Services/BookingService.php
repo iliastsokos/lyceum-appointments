@@ -26,17 +26,17 @@ class BookingService
     public function book(AppointmentSlot $slot, User $guardian, Child $child): Appointment
     {
         if (! $guardian->isGuardian()) {
-            throw ValidationException::withMessages(['guardian' => 'Only guardians can book appointments.']);
+            throw ValidationException::withMessages(['guardian' => 'Μόνο οι κηδεμόνες μπορούν να κλείνουν ραντεβού.']);
         }
 
         if ($child->guardian_id !== $guardian->id) {
-            throw ValidationException::withMessages(['child' => 'You can only book appointments for your own children.']);
+            throw ValidationException::withMessages(['child' => 'Μπορείτε να κλείσετε ραντεβού μόνο για τα δικά σας παιδιά.']);
         }
 
         $slotStart = Carbon::parse("{$slot->date->toDateString()} {$slot->start_time}");
 
         if ($slotStart->isPast()) {
-            throw ValidationException::withMessages(['slot' => 'This slot is in the past and can no longer be booked.']);
+            throw ValidationException::withMessages(['slot' => 'Αυτή η ώρα έχει περάσει και δεν μπορεί πλέον να κλειστεί.']);
         }
 
         try {
@@ -94,14 +94,14 @@ class BookingService
     public function cancel(Appointment $appointment, User $guardian, ?string $reason = null): Appointment
     {
         if ($appointment->guardian_id !== $guardian->id) {
-            throw ValidationException::withMessages(['appointment' => 'You can only cancel your own appointments.']);
+            throw ValidationException::withMessages(['appointment' => 'Μπορείτε να ακυρώσετε μόνο τα δικά σας ραντεβού.']);
         }
 
         return DB::transaction(function () use ($appointment, $reason) {
             $locked = Appointment::where('id', $appointment->id)->lockForUpdate()->firstOrFail();
 
             if ($locked->status === AppointmentStatus::Cancelled) {
-                throw ValidationException::withMessages(['appointment' => 'This appointment is already cancelled.']);
+                throw ValidationException::withMessages(['appointment' => 'Αυτό το ραντεβού έχει ήδη ακυρωθεί.']);
             }
 
             $locked->update([

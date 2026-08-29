@@ -19,13 +19,13 @@ class EnsureUserHasRole
         $user = $request->user();
 
         if (! $user || ! $user->isActive()) {
-            abort(403, 'Your account is not active. Please contact the school administration.');
+            abort(403, 'Ο λογαριασμός σας δεν είναι ενεργός. Επικοινωνήστε με τη Διεύθυνση του σχολείου.');
         }
 
         $allowed = array_map(fn (string $role) => UserRole::from($role), $roles);
 
         if (! in_array($user->role, $allowed, true)) {
-            abort(403, 'You are not authorized to access this page.');
+            abort(403, 'Δεν έχετε δικαίωμα πρόσβασης σε αυτή τη σελίδα.');
         }
 
         return $next($request);

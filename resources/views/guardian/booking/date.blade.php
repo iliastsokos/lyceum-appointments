@@ -1,30 +1,99 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Book with :name', ['name' => $teacher->full_name]) }}
+            {{ __('Ραντεβού με :name', ['name' => $teacher->full_name]) }}
         </h2>
     </x-slot>
+
+    @php
+        $today = today();
+        $prevMonth = $monthStart->copy()->subMonthNoOverflow();
+        $nextMonth = $monthStart->copy()->addMonthNoOverflow();
+        $canGoToPrevMonth = $prevMonth->endOfMonth()->greaterThanOrEqualTo($today->copy()->startOfMonth());
+
+        // Build a Monday-first grid, padding with leading/trailing blanks.
+        $leadingBlanks = ($monthStart->dayOfWeekIso - 1);
+        $daysInMonth = $monthStart->daysInMonth;
+    @endphp
 
     <div class="py-12">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
-                <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">{{ __('Step 2: Select a date') }}</h3>
+                <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">{{ __('Επιλέξτε ημερομηνία') }}</h3>
 
-                <form method="GET" action="{{ route('guardian.book.date', $teacher) }}" class="mt-4 flex flex-col sm:flex-row gap-4 sm:items-end">
-                    <div>
-                        <x-input-label for="date" :value="__('Date')" />
-                        <x-text-input id="date" name="date" type="date" class="mt-1 block w-full" value="{{ $date }}" min="{{ today()->toDateString() }}" required />
+                <div class="mt-4 flex items-center justify-between">
+                    @if ($canGoToPrevMonth)
+                        <a href="{{ route('guardian.book.date', ['teacher' => $teacher, 'month' => $prevMonth->format('Y-m')]) }}"
+                           class="p-2 rounded-md text-gray-500 hover:bg-gray-100" aria-label="{{ __('Προηγούμενος μήνας') }}">
+                            &laquo;
+                        </a>
+                    @else
+                        <span class="p-2 text-gray-300">&laquo;</span>
+                    @endif
+
+                    <div class="font-semibold text-gray-900 capitalize">
+                        {{ $monthStart->translatedFormat('F Y') }}
                     </div>
-                    <x-primary-button>{{ __('Show Available Times') }}</x-primary-button>
-                </form>
+
+                    <a href="{{ route('guardian.book.date', ['teacher' => $teacher, 'month' => $nextMonth->format('Y-m')]) }}"
+                       class="p-2 rounded-md text-gray-500 hover:bg-gray-100" aria-label="{{ __('Επόμενος μήνας') }}">
+                        &raquo;
+                    </a>
+                </div>
+
+                <div class="mt-4 grid grid-cols-7 gap-1 text-center text-xs font-medium text-gray-400">
+                    <div>Δε</div>
+                    <div>Τρ</div>
+                    <div>Τε</div>
+                    <div>Πε</div>
+                    <div>Πα</div>
+                    <div>Σα</div>
+                    <div>Κυ</div>
+                </div>
+
+                <div class="mt-1 grid grid-cols-7 gap-1">
+                    @for ($i = 0; $i < $leadingBlanks; $i++)
+                        <div></div>
+                    @endfor
+
+                    @for ($day = 1; $day <= $daysInMonth; $day++)
+                        @php
+                            $cellDate = $monthStart->copy()->day($day);
+                            $cellDateString = $cellDate->toDateString();
+                            $isPast = $cellDate->lt($today);
+                            $hasAvailability = in_array($cellDateString, $availableDates, true);
+                            $isSelected = $date === $cellDateString;
+                        @endphp
+
+                        @if ($isPast)
+                            <div class="aspect-square flex items-center justify-center rounded-md text-sm text-gray-300">
+                                {{ $day }}
+                            </div>
+                        @else
+                            <a href="{{ route('guardian.book.date', ['teacher' => $teacher, 'month' => $monthStart->format('Y-m'), 'date' => $cellDateString]) }}"
+                               class="aspect-square flex items-center justify-center rounded-md text-sm font-medium transition
+                                      {{ $hasAvailability ? 'bg-[#f2952b] text-white hover:bg-[#e08419]' : 'text-gray-700 hover:bg-gray-100' }}
+                                      {{ $isSelected ? 'ring-2 ring-offset-1 ring-[#0e6e73]' : '' }}">
+                                {{ $day }}
+                            </a>
+                        @endif
+                    @endfor
+                </div>
+
+                <p class="mt-4 text-xs text-gray-500 flex items-center gap-2">
+                    <span class="inline-block w-3 h-3 rounded-sm bg-[#f2952b]"></span>
+                    {{ __('Ημέρες με διαθέσιμα ραντεβού') }}
+                </p>
             </div>
 
             @if ($slots !== null)
                 <div class="bg-white shadow-sm sm:rounded-lg p-6">
-                    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">{{ __('Step 3: Select a time') }}</h3>
+                    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">
+                        {{ __('Διαθέσιμες ώρες για :date', ['date' => \Illuminate\Support\Carbon::parse($date)->translatedFormat('l, d/m/Y')]) }}
+                    </h3>
 
                     @if ($slots->isEmpty())
-                        <p class="mt-4 text-sm text-gray-500">{{ __('No availability on this date. Please choose another date.') }}</p>
+                        <p class="mt-4 text-sm text-gray-500">{{ __('Δεν υπάρχει διαθεσιμότητα αυτή την ημέρα. Επιλέξτε άλλη ημερομηνία από το ημερολόγιο.') }}</p>
                     @else
                         <div class="mt-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
                             @foreach ($slots as $slot)

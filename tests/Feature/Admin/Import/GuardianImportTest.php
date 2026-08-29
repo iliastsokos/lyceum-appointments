@@ -38,9 +38,9 @@ class GuardianImportTest extends TestCase
         $token = $preview->viewData('token');
         $result = $this->actingAs($admin)->post(route('admin.imports.commit', 'guardians'), ['token' => $token]);
         $result->assertOk();
-        $result->assertSee('Import completed.');
-        $result->assertSee('3 rows processed');
-        $result->assertSee('3 children associated');
+        $result->assertSee('Η εισαγωγή ολοκληρώθηκε.');
+        $result->assertSee('3 γραμμές επεξεργάστηκαν');
+        $result->assertSee('3 παιδιά συσχετίστηκαν');
 
         $this->assertSame(2, User::where('role', UserRole::Guardian)->count());
 
@@ -102,7 +102,7 @@ class GuardianImportTest extends TestCase
         $response = $this->actingAs($admin)->post(route('admin.imports.preview', 'guardians'), ['file' => $file]);
 
         $rows = $response->viewData('rows');
-        $this->assertSame('Invalid class', $rows->first()['errors']['child_class']);
+        $this->assertSame('Μη έγκυρη τάξη', $rows->first()['errors']['child_class']);
     }
 
     public function test_invalid_guardian_email_is_rejected(): void
@@ -115,7 +115,7 @@ class GuardianImportTest extends TestCase
         $response = $this->actingAs($admin)->post(route('admin.imports.preview', 'guardians'), ['file' => $file]);
 
         $rows = $response->viewData('rows');
-        $this->assertSame('Invalid email', $rows->first()['errors']['guardian_email']);
+        $this->assertSame('Μη έγκυρο email', $rows->first()['errors']['guardian_email']);
     }
 
     public function test_missing_child_name_is_rejected(): void
@@ -128,7 +128,7 @@ class GuardianImportTest extends TestCase
         $response = $this->actingAs($admin)->post(route('admin.imports.preview', 'guardians'), ['file' => $file]);
 
         $rows = $response->viewData('rows');
-        $this->assertSame('Required', $rows->first()['errors']['child_first_name']);
+        $this->assertSame('Υποχρεωτικό', $rows->first()['errors']['child_first_name']);
     }
 
     public function test_malformed_guardian_file_missing_columns_is_rejected(): void

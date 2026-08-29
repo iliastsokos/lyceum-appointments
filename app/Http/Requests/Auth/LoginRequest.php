@@ -46,7 +46,7 @@ class LoginRequest extends FormRequest
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'email' => 'Αυτά τα στοιχεία δεν αντιστοιχούν στα αρχεία μας.',
             ]);
         }
 
@@ -69,9 +69,8 @@ class LoginRequest extends FormRequest
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
+            'email' => __('Πολλές προσπάθειες σύνδεσης. Παρακαλούμε δοκιμάστε ξανά σε :seconds δευτερόλεπτα.', [
                 'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
             ]),
         ]);
     }

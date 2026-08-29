@@ -13,7 +13,7 @@
                 <!-- Navigation Links -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                        {{ __('Dashboard') }}
+                        {{ __('Πίνακας Ελέγχου') }}
                     </x-nav-link>
                 </div>
             </div>
@@ -37,7 +37,7 @@
 
                     <x-slot name="content">
                         <x-dropdown-link :href="route('profile.edit')">
-                            {{ __('Profile') }}
+                            {{ __('Προφίλ') }}
                         </x-dropdown-link>
 
                         <!-- Authentication -->
@@ -47,7 +47,7 @@
                             <x-dropdown-link :href="route('logout')"
                                     onclick="event.preventDefault();
                                                 this.closest('form').submit();">
-                                {{ __('Log Out') }}
+                                {{ __('Αποσύνδεση') }}
                             </x-dropdown-link>
                         </form>
                     </x-slot>
@@ -70,10 +70,10 @@
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
-                {{ __('Dashboard') }}
+                {{ __('Πίνακας Ελέγχου') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('notifications.index')" :active="request()->routeIs('notifications.*')">
-                {{ __('Notifications') }}
+                {{ __('Ειδοποιήσεις') }}
                 @php($unread = Auth::user()->notifications()->whereNull('read_at')->count())
                 @if ($unread > 0)
                     <span class="ml-1 inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full bg-red-600 text-white text-[10px] font-semibold leading-none align-middle">{{ $unread > 9 ? '9+' : $unread }}</span>
@@ -90,7 +90,7 @@
 
             <div class="mt-3 space-y-1">
                 <x-responsive-nav-link :href="route('profile.edit')">
-                    {{ __('Profile') }}
+                    {{ __('Προφίλ') }}
                 </x-responsive-nav-link>
 
                 <!-- Authentication -->
@@ -100,7 +100,7 @@
                     <x-responsive-nav-link :href="route('logout')"
                             onclick="event.preventDefault();
                                         this.closest('form').submit();">
-                        {{ __('Log Out') }}
+                        {{ __('Αποσύνδεση') }}
                     </x-responsive-nav-link>
                 </form>
             </div>

@@ -1,6 +1,6 @@
 @php($appName = config('app.name', 'Lyceum Appointments'))
 <!DOCTYPE html>
-<html lang="en">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -56,7 +56,7 @@
         <div class="code" aria-hidden="true">{{ $code }}</div>
         <h1>{{ $title }}</h1>
         <p>{{ $message }}</p>
-        <a class="button" href="{{ url('/') }}">{{ __('Go to homepage') }}</a>
+        <a class="button" href="{{ url('/') }}">{{ __('Μετάβαση στην αρχική σελίδα') }}</a>
     </main>
 </body>
 </html>

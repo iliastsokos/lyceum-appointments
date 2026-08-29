@@ -15,6 +15,6 @@ class SlotUnavailableException extends RuntimeException
 {
     public function __construct()
     {
-        parent::__construct('Unfortunately, this appointment slot was just booked by another user. Please select another available slot.');
+        parent::__construct('Δυστυχώς, αυτό το ραντεβού μόλις κλείστηκε από άλλον χρήστη. Παρακαλούμε επιλέξτε άλλη διαθέσιμη ώρα.');
     }
 }

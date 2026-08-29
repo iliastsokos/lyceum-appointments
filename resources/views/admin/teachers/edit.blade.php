@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Edit Teacher') }}
+            {{ __('Επεξεργασία Εκπαιδευτικού') }}
         </h2>
     </x-slot>
 
@@ -14,7 +14,7 @@
                     @include('admin.teachers.partials.form', ['teacher' => $teacher])
 
                     <div class="flex items-center justify-end mt-6">
-                        <x-primary-button>{{ __('Save Changes') }}</x-primary-button>
+                        <x-primary-button>{{ __('Αποθήκευση Αλλαγών') }}</x-primary-button>
                     </div>
                 </form>
             </div>

@@ -136,7 +136,7 @@ class ConcurrentBookingTest extends TestCase
         $this->assertCount(1, $failures, "Expected exactly one failed booking.\n{$debug}");
 
         $this->assertStringContainsString('SlotUnavailableException', $failures[0]);
-        $this->assertStringContainsString('just booked by another user', $failures[0]);
+        $this->assertStringContainsString('μόλις κλείστηκε από άλλον χρήστη', $failures[0]);
 
         // The database must never contain more than one active appointment
         // for this slot — this is the actual correctness guarantee.

@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Edit Guardian') }}
+            {{ __('Επεξεργασία Κηδεμόνα') }}
         </h2>
     </x-slot>
 
@@ -14,15 +14,15 @@
                     @include('admin.guardians.partials.form', ['guardian' => $guardian])
 
                     <div class="flex items-center justify-end mt-6">
-                        <x-primary-button>{{ __('Save Changes') }}</x-primary-button>
+                        <x-primary-button>{{ __('Αποθήκευση Αλλαγών') }}</x-primary-button>
                     </div>
                 </form>
             </div>
 
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
-                <h3 class="text-sm font-medium text-gray-900">{{ __('Children') }}</h3>
+                <h3 class="text-sm font-medium text-gray-900">{{ __('Παιδιά') }}</h3>
                 @if ($guardian->children->isEmpty())
-                    <p class="mt-2 text-sm text-gray-500">{{ __('No children on file.') }}</p>
+                    <p class="mt-2 text-sm text-gray-500">{{ __('Δεν υπάρχουν καταχωρημένα παιδιά.') }}</p>
                 @else
                     <ul class="mt-2 text-sm text-gray-600 space-y-1">
                         @foreach ($guardian->children as $child)

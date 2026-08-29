@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Add Guardian') }}
+            {{ __('Προσθήκη Κηδεμόνα') }}
         </h2>
     </x-slot>
 
@@ -13,7 +13,7 @@
                     @include('admin.guardians.partials.form')
 
                     <div class="flex items-center justify-end mt-6">
-                        <x-primary-button>{{ __('Create Guardian') }}</x-primary-button>
+                        <x-primary-button>{{ __('Δημιουργία Κηδεμόνα') }}</x-primary-button>
                     </div>
                 </form>
             </div>

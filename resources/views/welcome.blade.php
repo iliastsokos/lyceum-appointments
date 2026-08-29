@@ -39,11 +39,8 @@
                     </nav>
 
                     <div class="hidden md:flex items-center gap-3">
-                        <a href="{{ route('login') }}" class="px-4 py-2 text-sm font-semibold text-white rounded-md hover:bg-white/10 transition">
+                        <a href="{{ route('login') }}" class="px-4 py-2 text-sm font-semibold text-white bg-[#f2952b] rounded-md shadow-sm hover:bg-[#e08419] transition">
                             Σύνδεση
-                        </a>
-                        <a href="{{ route('register') }}" class="px-4 py-2 text-sm font-semibold text-white bg-[#f2952b] rounded-md shadow-sm hover:bg-[#e08419] transition">
-                            Εγγραφή Κηδεμόνα
                         </a>
                     </div>
 
@@ -60,8 +57,7 @@
                     <a href="#for-you" class="block px-3 py-2 rounded-md text-white/90 font-medium hover:bg-white/10">Για Όλους</a>
                     <a href="#contact" class="block px-3 py-2 rounded-md text-white/90 font-medium hover:bg-white/10">Επικοινωνία</a>
                     <div class="pt-3 mt-3 border-t border-white/15 flex flex-col gap-2">
-                        <a href="{{ route('login') }}" class="px-3 py-2 rounded-md text-white font-semibold text-center border border-white/30">Σύνδεση</a>
-                        <a href="{{ route('register') }}" class="px-3 py-2 rounded-md text-white font-semibold text-center bg-[#f2952b]">Εγγραφή Κηδεμόνα</a>
+                        <a href="{{ route('login') }}" class="px-3 py-2 rounded-md text-white font-semibold text-center bg-[#f2952b]">Σύνδεση</a>
                     </div>
                 </div>
             </div>
@@ -93,12 +89,9 @@
                         <a href="{{ route('login') }}" class="inline-flex items-center justify-center px-6 py-3 rounded-md bg-[#0e6e73] text-white font-semibold shadow-sm hover:bg-[#0b5a5e] transition">
                             Σύνδεση
                         </a>
-                        <a href="{{ route('register') }}" class="inline-flex items-center justify-center px-6 py-3 rounded-md bg-[#f2952b] text-white font-semibold shadow-sm hover:bg-[#e08419] transition">
-                            Είμαι Γονέας – Εγγραφή
-                        </a>
                     </div>
                     <p class="mt-4 text-sm text-slate-500">
-                        Είστε εκπαιδευτικός ή διοικητικός; Οι λογαριασμοί σας δημιουργούνται από τη Διεύθυνση του σχολείου.
+                        Οι λογαριασμοί κηδεμόνων και εκπαιδευτικών δημιουργούνται από τη Διεύθυνση του σχολείου — θα λάβετε τα στοιχεία σύνδεσής σας από εκείνη.
                     </p>
                 </div>
 
@@ -132,7 +125,7 @@
                 <div class="mt-14 grid md:grid-cols-3 gap-8">
                     @php
                         $steps = [
-                            ['n' => '1', 'title' => 'Δημιουργήστε λογαριασμό', 'text' => 'Οι κηδεμόνες εγγράφονται μόνοι τους και προσθέτουν τα παιδιά τους. Λογαριασμοί εκπαιδευτικών δημιουργούνται από τη Διεύθυνση.'],
+                            ['n' => '1', 'title' => 'Λάβετε τα στοιχεία σας', 'text' => 'Η Διεύθυνση δημιουργεί τον λογαριασμό σας και σας δίνει προσωρινό κωδικό. Συνδέεστε και τον αλλάζετε με έναν δικό σας.'],
                             ['n' => '2', 'title' => 'Επιλέξτε ώρα', 'text' => 'Δείτε τη διαθεσιμότητα κάθε εκπαιδευτικού σε πραγματικό χρόνο και κλείστε ένα ραντεβού πέντε λεπτών με λίγα κλικ.'],
                             ['n' => '3', 'title' => 'Λάβετε ειδοποίηση', 'text' => 'Εκπαιδευτικοί και κηδεμόνες ενημερώνονται άμεσα για κάθε νέο ραντεβού ή ακύρωση.'],
                         ];
@@ -200,13 +193,10 @@
         <section class="bg-[#0e6e73]">
             <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-14 text-center">
                 <h2 class="text-2xl sm:text-3xl font-extrabold text-white">Είστε έτοιμοι να ξεκινήσετε;</h2>
-                <p class="mt-3 text-[#bfe3e3]">Κλείστε το πρώτο σας ραντεβού σήμερα.</p>
+                <p class="mt-3 text-[#bfe3e3]">Συνδεθείτε με τα στοιχεία που σας έδωσε η Διεύθυνση και κλείστε το πρώτο σας ραντεβού σήμερα.</p>
                 <div class="mt-7 flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="{{ route('register') }}" class="inline-flex items-center justify-center px-6 py-3 rounded-md bg-[#f2952b] text-white font-semibold shadow-sm hover:bg-[#e08419] transition">
-                        Εγγραφή Κηδεμόνα
-                    </a>
-                    <a href="{{ route('login') }}" class="inline-flex items-center justify-center px-6 py-3 rounded-md bg-white/10 text-white font-semibold border border-white/30 hover:bg-white/20 transition">
-                        Έχω ήδη λογαριασμό
+                    <a href="{{ route('login') }}" class="inline-flex items-center justify-center px-6 py-3 rounded-md bg-[#f2952b] text-white font-semibold shadow-sm hover:bg-[#e08419] transition">
+                        Σύνδεση
                     </a>
                 </div>
             </div>
@@ -231,7 +221,6 @@
                     <h4 class="text-white font-bold text-sm uppercase tracking-wide">Σύνδεσμοι</h4>
                     <ul class="mt-4 space-y-2 text-sm">
                         <li><a href="{{ route('login') }}" class="hover:text-white transition">Σύνδεση</a></li>
-                        <li><a href="{{ route('register') }}" class="hover:text-white transition">Εγγραφή Κηδεμόνα</a></li>
                         <li><a href="https://lyk-rafin-new.att.sch.gr/" target="_blank" rel="noopener noreferrer" class="hover:text-white transition">Επίσημη Ιστοσελίδα Σχολείου</a></li>
                     </ul>
                 </div>

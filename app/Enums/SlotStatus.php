@@ -11,9 +11,9 @@ enum SlotStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::Available => 'Available',
-            self::Booked => 'Booked',
-            self::Disabled => 'Disabled',
+            self::Available => 'Διαθέσιμο',
+            self::Booked => 'Κλεισμένο',
+            self::Disabled => 'Απενεργοποιημένο',
         };
     }
 }

@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Slots for :date', ['date' => \Illuminate\Support\Carbon::parse($availability->date)->format('l, d/m/Y')]) }}
+            {{ __('Ραντεβού για :date', ['date' => \Illuminate\Support\Carbon::parse($availability->date)->translatedFormat('l, d/m/Y')]) }}
         </h2>
     </x-slot>
 
@@ -10,7 +10,7 @@
 
             @if (session('status'))
                 <div class="bg-green-50 border border-green-300 text-green-900 rounded-md p-4 text-sm">
-                    {{ __('Done.') }}
+                    {{ __('Ολοκληρώθηκε.') }}
                 </div>
             @endif
 
@@ -22,9 +22,9 @@
 
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
                 <div class="flex items-center gap-4 text-sm text-gray-600 mb-4">
-                    <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-green-500 inline-block"></span> {{ __('Available') }}</span>
-                    <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span> {{ __('Booked') }}</span>
-                    <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-gray-400 inline-block"></span> {{ __('Disabled') }}</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-green-500 inline-block"></span> {{ __('Διαθέσιμο') }}</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span> {{ __('Κλεισμένο') }}</span>
+                    <span class="inline-flex items-center gap-1"><span class="w-3 h-3 rounded-full bg-gray-400 inline-block"></span> {{ __('Απενεργοποιημένο') }}</span>
                 </div>
 
                 <div class="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">

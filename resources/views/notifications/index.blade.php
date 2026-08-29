@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Notifications') }}
+            {{ __('Ειδοποιήσεις') }}
         </h2>
     </x-slot>
 
@@ -13,7 +13,7 @@
                     <form method="POST" action="{{ route('notifications.read-all') }}">
                         @csrf
                         @method('PATCH')
-                        <button type="submit" class="text-sm text-indigo-600 hover:text-indigo-900">{{ __('Mark all as read') }}</button>
+                        <button type="submit" class="text-sm text-indigo-600 hover:text-indigo-900">{{ __('Σήμανση όλων ως αναγνωσμένα') }}</button>
                     </form>
                 </div>
             @endif
@@ -31,13 +31,13 @@
                                 <form method="POST" action="{{ route('notifications.read', $notification) }}">
                                     @csrf
                                     @method('PATCH')
-                                    <button type="submit" class="text-sm text-indigo-600 hover:text-indigo-900 whitespace-nowrap">{{ __('Mark read') }}</button>
+                                    <button type="submit" class="text-sm text-indigo-600 hover:text-indigo-900 whitespace-nowrap">{{ __('Σήμανση ως αναγνωσμένο') }}</button>
                                 </form>
                             @endunless
                         </div>
                     </div>
                 @empty
-                    <div class="p-6 text-sm text-gray-500 text-center">{{ __('No notifications yet.') }}</div>
+                    <div class="p-6 text-sm text-gray-500 text-center">{{ __('Δεν υπάρχουν ειδοποιήσεις ακόμα.') }}</div>
                 @endforelse
             </div>
 

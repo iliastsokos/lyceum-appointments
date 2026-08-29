@@ -23,6 +23,6 @@ class DashboardStatsTest extends TestCase
 
         $response->assertOk();
         // Teachers: 2, Guardians: 3, Students: 3 — each appears as a distinct stat tile.
-        $response->assertSeeInOrder(['Teachers', '2', 'Guardians', '3', 'Students', '3']);
+        $response->assertSeeInOrder(['Εκπαιδευτικοί', '2', 'Κηδεμόνες', '3', 'Μαθητές', '3']);
     }
 }
