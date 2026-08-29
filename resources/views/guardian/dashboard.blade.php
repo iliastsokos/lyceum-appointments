@@ -35,8 +35,28 @@
             </div>
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                <h3 class="text-lg font-medium text-gray-900">{{ __('My Appointments') }}</h3>
-                <p class="mt-2 text-sm text-gray-600">{{ __('Appointment booking will be available soon.') }}</p>
+                <div class="flex items-center justify-between">
+                    <h3 class="text-lg font-medium text-gray-900">{{ __('Upcoming Appointments') }}</h3>
+                    <div class="flex gap-4 text-sm">
+                        <a href="{{ route('guardian.book.teachers') }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Book an Appointment') }}</a>
+                        <a href="{{ route('guardian.appointments.index') }}" class="text-indigo-600 hover:text-indigo-900">{{ __('View All') }}</a>
+                    </div>
+                </div>
+
+                @if ($upcomingAppointments->isEmpty())
+                    <p class="mt-4 text-sm text-gray-600">{{ __('You have no upcoming appointments.') }}</p>
+                @else
+                    <div class="mt-4 divide-y divide-gray-100">
+                        @foreach ($upcomingAppointments as $appointment)
+                            <div class="py-3 flex items-center justify-between text-sm">
+                                <div>
+                                    <div class="font-medium text-gray-900">{{ $appointment->teacher->full_name }} &middot; {{ $appointment->child->full_name }}</div>
+                                    <div class="text-gray-500">{{ \Illuminate\Support\Carbon::parse($appointment->slot->date)->format('d/m/Y') }} at {{ substr($appointment->slot->start_time, 0, 5) }}</div>
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
             </div>
         </div>
     </div>

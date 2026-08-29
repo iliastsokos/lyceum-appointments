@@ -90,4 +90,39 @@ class User extends Authenticatable
     {
         return $this->hasMany(AppointmentSlot::class, 'teacher_id');
     }
+
+    /**
+     * Appointments where this user is the teacher.
+     *
+     * @return HasMany<Appointment, $this>
+     */
+    public function appointmentsAsTeacher(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'teacher_id');
+    }
+
+    /**
+     * Appointments where this user is the guardian.
+     *
+     * @return HasMany<Appointment, $this>
+     */
+    public function appointmentsAsGuardian(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'guardian_id');
+    }
+
+    /**
+     * This deliberately overrides the Notifiable trait's default
+     * `notifications()` relation (Laravel's polymorphic database
+     * notifications) with our own custom, spec-defined notifications table.
+     * `notify()` (used for e.g. password reset emails via the mail channel)
+     * still works normally — only the unused database-channel/relation is
+     * replaced.
+     *
+     * @return HasMany<Notification, $this>
+     */
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class, 'user_id')->latest('created_at');
+    }
 }

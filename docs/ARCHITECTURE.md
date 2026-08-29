@@ -1,6 +1,18 @@
 # Architecture — Lyceum Parent–Teacher Appointment Booking System
 
-Status: Phases 1–3 complete. This document is updated as later phases land.
+Status: Phases 1–4 complete. This document is updated as later phases land.
+
+## Phase 4 note — booking engine (the critical phase)
+
+`BookingService::book()` implements the exact pseudocode from spec §10: transaction → `lockForUpdate()` on the slot → verify `AVAILABLE` → create appointment → mark slot `BOOKED` → commit, throwing `App\Exceptions\SlotUnavailableException` (fixed message: *"Unfortunately, this appointment slot was just booked by another user..."*) both when the status check fails and — as a second, independent backstop — when a `QueryException` surfaces a unique-constraint violation or a lock-wait-timeout/deadlock. `BookingService::cancel()` mirrors this: lock the appointment, refuse to double-cancel, free the slot, notify the teacher.
+
+**The DB-level unique constraint problem, and its resolution:** a plain `UNIQUE` on `appointments.slot_id` cannot work, because a cancelled appointment must let its slot be legitimately rebooked (spec §13/§27) — a second row with the same `slot_id` is exactly what a rebooking is. The fix is `active_slot_id`: a nullable column that mirrors `slot_id` while the appointment is `new`/`confirmed`, and is set to `NULL` on cancellation. MySQL/MariaDB treat `NULL` as distinct in a unique index, so `UNIQUE(active_slot_id)` gives a real, enforced-by-the-database guarantee ("at most one *active* booking per slot, ever") without blocking legitimate rebooking after cancellation.
+
+**Schema pulled forward from Phase 5:** the `notifications` table (exact columns from spec §9) was built now, one phase earlier than originally planned, because `BookingService`'s step 9 ("create notification") must happen inside the same atomic transaction as the booking/cancellation itself — writing it later, outside the transaction, would let a booking succeed while its notification silently failed to be created, or vice versa. Phase 5 will build the actual notification center UI (badge, unread count, mark-as-read) on top of this table; the write-path is already correct and tested.
+
+**Testing real concurrency, not a simulation:** `tests/Feature/Booking/ConcurrentBookingTest.php` deliberately does not use `RefreshDatabase` — that trait wraps each test in an uncommitted transaction, which would make its fixture rows invisible to a genuinely separate process. Instead it launches two independent PHP processes (`tests/Support/concurrent_booking_worker.php`, via Symfony Process) that both call the real `BookingService::book()` against the same committed slot row, synchronized through a file-based ready/go rendezvous so they race for the same row lock as closely as two real concurrent HTTP requests would. The test asserts exactly one process succeeds, the other receives the exact spec-mandated message, and the database ends up with exactly one appointment. This was manually verified outside PHPUnit too (two real background OS processes racing for the same slot) before being wired into the automated suite.
+
+**Factory bug found and fixed along the way:** `AppointmentSlotFactory::definition()` originally called `Availability::factory()->create()` *eagerly*, so every `AppointmentSlot::factory()->create([...])` call silently created and orphaned an extra availability+teacher, even when the caller overrode `teacher_id`/`availability_id`. Harmless under `RefreshDatabase` (rolled back), but a real data leak for the non-transactional concurrency test. Fixed by making the defaults lazy factory relations (`User::factory()->teacher()` / `Availability::factory()`), which Laravel discards unresolved when overridden — the same pattern used correctly elsewhere in the codebase.
 
 ## Phase 3 note — availability & slots
 

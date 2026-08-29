@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[Fillable(['guardian_id', 'first_name', 'last_name', 'class'])]
 class Child extends Model
@@ -21,6 +22,14 @@ class Child extends Model
     public function guardian(): BelongsTo
     {
         return $this->belongsTo(User::class, 'guardian_id');
+    }
+
+    /**
+     * @return HasMany<Appointment, $this>
+     */
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class, 'child_id');
     }
 
     protected function fullName(): Attribute

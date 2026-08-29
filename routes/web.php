@@ -5,9 +5,12 @@ use App\Http\Controllers\Admin\GuardianController as AdminGuardianController;
 use App\Http\Controllers\Admin\TeacherController as AdminTeacherController;
 use App\Http\Controllers\Auth\ForcePasswordChangeController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\Guardian\AppointmentController as GuardianAppointmentController;
+use App\Http\Controllers\Guardian\BookingController;
 use App\Http\Controllers\Guardian\ChildController;
 use App\Http\Controllers\Guardian\DashboardController as GuardianDashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Teacher\AppointmentController as TeacherAppointmentController;
 use App\Http\Controllers\Teacher\AvailabilityController;
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardController;
 use Illuminate\Support\Facades\Route;
@@ -34,6 +37,14 @@ Route::middleware(['auth', 'role:guardian'])->prefix('guardian')->name('guardian
     Route::get('/children/{child}/edit', [ChildController::class, 'edit'])->name('children.edit');
     Route::put('/children/{child}', [ChildController::class, 'update'])->name('children.update');
     Route::delete('/children/{child}', [ChildController::class, 'destroy'])->name('children.destroy');
+
+    Route::get('/book', [BookingController::class, 'teachers'])->name('book.teachers');
+    Route::get('/book/{teacher}', [BookingController::class, 'pickDate'])->name('book.date');
+    Route::get('/book/{teacher}/slots/{slot}', [BookingController::class, 'confirm'])->name('book.confirm');
+    Route::post('/book/{teacher}/slots/{slot}', [BookingController::class, 'store'])->name('book.store');
+
+    Route::get('/appointments', [GuardianAppointmentController::class, 'index'])->name('appointments.index');
+    Route::patch('/appointments/{appointment}/cancel', [GuardianAppointmentController::class, 'cancel'])->name('appointments.cancel');
 });
 
 Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
@@ -44,6 +55,8 @@ Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')
     Route::get('/availability/{availability}', [AvailabilityController::class, 'show'])->name('availability.show');
     Route::delete('/availability/{availability}', [AvailabilityController::class, 'destroy'])->name('availability.destroy');
     Route::patch('/availability/slots/{slot}/toggle', [AvailabilityController::class, 'toggleSlot'])->name('availability.slots.toggle');
+
+    Route::get('/appointments', [TeacherAppointmentController::class, 'index'])->name('appointments.index');
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {

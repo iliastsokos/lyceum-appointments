@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 #[Fillable(['teacher_id', 'availability_id', 'date', 'start_time', 'end_time', 'status'])]
 class AppointmentSlot extends Model
@@ -40,5 +41,15 @@ class AppointmentSlot extends Model
     public function availability(): BelongsTo
     {
         return $this->belongsTo(Availability::class, 'availability_id');
+    }
+
+    /**
+     * The active (non-cancelled) appointment for this slot, if any.
+     *
+     * @return HasOne<Appointment, $this>
+     */
+    public function appointment(): HasOne
+    {
+        return $this->hasOne(Appointment::class, 'slot_id')->where('status', '!=', 'cancelled');
     }
 }
