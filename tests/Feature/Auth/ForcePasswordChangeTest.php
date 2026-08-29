@@ -44,4 +44,23 @@ class ForcePasswordChangeTest extends TestCase
 
         $this->actingAs($guardian)->get(route('guardian.dashboard'))->assertOk();
     }
+
+    public function test_the_actual_html_form_submission_is_accepted(): void
+    {
+        // Regression test: the Blade form posts with Laravel's `_method`
+        // spoofing (POST + @method('PUT')), not a raw PUT request. A prior
+        // version of the view was missing @method('PUT'), which the other
+        // tests here — calling ->put() directly — never caught, since that
+        // bypasses the spoofing middleware entirely.
+        $guardian = User::factory()->guardian()->mustChangePassword()->create();
+
+        $response = $this->actingAs($guardian)->post(route('password.force-change.update'), [
+            '_method' => 'PUT',
+            'password' => 'ANewSecurePass123',
+            'password_confirmation' => 'ANewSecurePass123',
+        ]);
+
+        $response->assertRedirect(route('dashboard'));
+        $this->assertFalse($guardian->refresh()->must_change_password);
+    }
 }

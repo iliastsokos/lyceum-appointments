@@ -5,6 +5,7 @@
 
     <form method="POST" action="{{ route('password.force-change.update') }}">
         @csrf
+        @method('PUT')
 
         <div>
             <x-input-label for="password" :value="__('New password')" />
