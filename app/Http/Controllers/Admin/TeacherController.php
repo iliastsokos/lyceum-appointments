@@ -92,6 +92,23 @@ class TeacherController extends Controller
         return redirect()->route('admin.teachers.index')->with('status', 'teacher-status-updated');
     }
 
+    public function resetPassword(User $teacher): RedirectResponse
+    {
+        abort_unless($teacher->isTeacher(), 404);
+        $this->authorize('update', $teacher);
+
+        $temporaryPassword = $this->provisioning->generateTemporaryPassword();
+
+        $teacher->forceFill([
+            'password' => Hash::make($temporaryPassword),
+            'must_change_password' => true,
+        ])->save();
+
+        return redirect()->route('admin.teachers.index')
+            ->with('status', 'teacher-password-reset')
+            ->with('temporaryPassword', $temporaryPassword);
+    }
+
     public function destroy(User $teacher): RedirectResponse
     {
         abort_unless($teacher->isTeacher(), 404);

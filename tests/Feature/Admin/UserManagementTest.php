@@ -248,4 +248,58 @@ class UserManagementTest extends TestCase
         $this->actingAs($teacher)->delete(route('admin.guardians.destroy', $guardian))->assertForbidden();
         $this->assertDatabaseHas('users', ['id' => $guardian->id]);
     }
+
+    public function test_admin_can_reset_a_teachers_password(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $teacher = User::factory()->teacher()->create(['must_change_password' => false]);
+        $originalPassword = $teacher->password;
+
+        $response = $this->actingAs($admin)->patch(route('admin.teachers.reset-password', $teacher));
+
+        $response->assertRedirect(route('admin.teachers.index'));
+        $response->assertSessionHas('temporaryPassword');
+
+        $teacher->refresh();
+        $this->assertNotSame($originalPassword, $teacher->password);
+        $this->assertTrue($teacher->must_change_password);
+        $this->assertTrue(Hash::check(session('temporaryPassword'), $teacher->password));
+    }
+
+    public function test_non_admin_cannot_reset_a_teachers_password(): void
+    {
+        $otherTeacher = User::factory()->teacher()->create();
+        $teacher = User::factory()->teacher()->create();
+        $originalPassword = $teacher->password;
+
+        $this->actingAs($otherTeacher)->patch(route('admin.teachers.reset-password', $teacher))->assertForbidden();
+        $this->assertSame($originalPassword, $teacher->fresh()->password);
+    }
+
+    public function test_admin_can_reset_a_guardians_password(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $guardian = User::factory()->guardian()->create(['must_change_password' => false]);
+        $originalPassword = $guardian->password;
+
+        $response = $this->actingAs($admin)->patch(route('admin.guardians.reset-password', $guardian));
+
+        $response->assertRedirect(route('admin.guardians.index'));
+        $response->assertSessionHas('temporaryPassword');
+
+        $guardian->refresh();
+        $this->assertNotSame($originalPassword, $guardian->password);
+        $this->assertTrue($guardian->must_change_password);
+        $this->assertTrue(Hash::check(session('temporaryPassword'), $guardian->password));
+    }
+
+    public function test_non_admin_cannot_reset_a_guardians_password(): void
+    {
+        $teacher = User::factory()->teacher()->create();
+        $guardian = User::factory()->guardian()->create();
+        $originalPassword = $guardian->password;
+
+        $this->actingAs($teacher)->patch(route('admin.guardians.reset-password', $guardian))->assertForbidden();
+        $this->assertSame($originalPassword, $guardian->fresh()->password);
+    }
 }

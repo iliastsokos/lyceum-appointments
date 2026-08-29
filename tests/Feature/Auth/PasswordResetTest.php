@@ -47,6 +47,17 @@ class PasswordResetTest extends TestCase
         });
     }
 
+    public function test_reset_password_email_is_rendered_in_greek(): void
+    {
+        $user = User::factory()->create();
+        $notification = new ResetPassword('sometoken');
+
+        $html = $notification->toMail($user)->render();
+
+        $this->assertStringContainsString('Επαναφορά Κωδικού', $html);
+        $this->assertStringNotContainsString('Regards,', $html);
+    }
+
     public function test_password_can_be_reset_with_valid_token(): void
     {
         Notification::fake();

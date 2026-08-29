@@ -76,6 +76,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/teachers/{teacher}/edit', [AdminTeacherController::class, 'edit'])->name('teachers.edit');
     Route::put('/teachers/{teacher}', [AdminTeacherController::class, 'update'])->name('teachers.update');
     Route::patch('/teachers/{teacher}/toggle-status', [AdminTeacherController::class, 'toggleStatus'])->name('teachers.toggle-status');
+    Route::patch('/teachers/{teacher}/reset-password', [AdminTeacherController::class, 'resetPassword'])->name('teachers.reset-password');
     Route::delete('/teachers/{teacher}', [AdminTeacherController::class, 'destroy'])->name('teachers.destroy');
 
     Route::get('/teachers/{teacher}/availability', [AdminTeacherAvailabilityController::class, 'index'])->name('teachers.availability.index');
@@ -90,6 +91,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/guardians/{guardian}/edit', [AdminGuardianController::class, 'edit'])->name('guardians.edit');
     Route::put('/guardians/{guardian}', [AdminGuardianController::class, 'update'])->name('guardians.update');
     Route::patch('/guardians/{guardian}/toggle-status', [AdminGuardianController::class, 'toggleStatus'])->name('guardians.toggle-status');
+    Route::patch('/guardians/{guardian}/reset-password', [AdminGuardianController::class, 'resetPassword'])->name('guardians.reset-password');
     Route::delete('/guardians/{guardian}', [AdminGuardianController::class, 'destroy'])->name('guardians.destroy');
 
     Route::get('/imports', function () {

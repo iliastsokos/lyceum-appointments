@@ -94,6 +94,23 @@ class GuardianController extends Controller
         return redirect()->route('admin.guardians.index')->with('status', 'guardian-status-updated');
     }
 
+    public function resetPassword(User $guardian): RedirectResponse
+    {
+        abort_unless($guardian->isGuardian(), 404);
+        $this->authorize('update', $guardian);
+
+        $temporaryPassword = $this->provisioning->generateTemporaryPassword();
+
+        $guardian->forceFill([
+            'password' => Hash::make($temporaryPassword),
+            'must_change_password' => true,
+        ])->save();
+
+        return redirect()->route('admin.guardians.index')
+            ->with('status', 'guardian-password-reset')
+            ->with('temporaryPassword', $temporaryPassword);
+    }
+
     public function destroy(User $guardian): RedirectResponse
     {
         abort_unless($guardian->isGuardian(), 404);
