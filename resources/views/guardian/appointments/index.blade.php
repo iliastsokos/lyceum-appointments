@@ -48,7 +48,7 @@
                         <x-input-label for="status" :value="__('Κατάσταση')" />
                         <select id="status" name="status" class="mt-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
                             <option value="">{{ __('Όλες') }}</option>
-                            @foreach (['new', 'confirmed', 'cancelled', 'completed'] as $status)
+                            @foreach (['new', 'cancelled', 'completed'] as $status)
                                 <option value="{{ $status }}" @selected(request('status') === $status)>{{ \App\Enums\AppointmentStatus::from($status)->label() }}</option>
                             @endforeach
                         </select>
@@ -82,7 +82,7 @@
                                 </div>
                                 <div class="mt-1 text-xs text-gray-400">{{ __('Κλείστηκε') }}: {{ $appointment->booked_at->format('d/m/Y H:i') }}</div>
 
-                                @if (in_array($appointment->status->value, ['new', 'confirmed']))
+                                @if ($appointment->status->value === 'new')
                                     <div class="mt-3">
                                         <x-confirm-form-button
                                             :action="route('guardian.appointments.cancel', $appointment)"

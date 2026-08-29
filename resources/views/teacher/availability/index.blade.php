@@ -6,7 +6,9 @@
     </x-slot>
 
     @php
-        $timeOptions = collect(range(0, 287))->map(fn ($i) => sprintf('%02d:%02d', intdiv($i * 5, 60), ($i * 5) % 60));
+        // Restricted to the school's morning shift (08:00–14:10) to keep the
+        // dropdown short and on-topic for typical parent-teacher hours.
+        $timeOptions = collect(range(8 * 60, 14 * 60 + 10, 5))->map(fn ($m) => sprintf('%02d:%02d', intdiv($m, 60), $m % 60));
     @endphp
 
     <div class="py-12">

@@ -17,7 +17,7 @@
                         <x-input-label for="status" :value="__('Κατάσταση')" />
                         <select id="status" name="status" class="mt-1 border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
                             <option value="">{{ __('Όλες') }}</option>
-                            @foreach (['new', 'confirmed', 'cancelled', 'completed'] as $status)
+                            @foreach (['new', 'cancelled', 'completed'] as $status)
                                 <option value="{{ $status }}" @selected(request('status') === $status)>{{ \App\Enums\AppointmentStatus::from($status)->label() }}</option>
                             @endforeach
                         </select>

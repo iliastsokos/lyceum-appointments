@@ -15,7 +15,7 @@ class DashboardController extends Controller
 
         $upcomingAppointments = $request->user()->appointmentsAsGuardian()
             ->with(['teacher', 'child', 'slot'])
-            ->whereIn('status', [AppointmentStatus::New, AppointmentStatus::Confirmed])
+            ->where('status', AppointmentStatus::New)
             ->whereHas('slot', fn ($q) => $q->where('date', '>=', today()->toDateString()))
             ->orderBy('booked_at')
             ->limit(5)

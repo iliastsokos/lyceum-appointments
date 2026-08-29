@@ -15,7 +15,7 @@ class DashboardController extends Controller
 
         $todaysAppointments = $teacher->appointmentsAsTeacher()
             ->with(['guardian', 'child', 'slot'])
-            ->whereIn('status', [AppointmentStatus::New, AppointmentStatus::Confirmed])
+            ->where('status', AppointmentStatus::New)
             ->whereHas('slot', fn ($q) => $q->where('date', today()->toDateString()))
             ->get()
             ->sortBy(fn ($appointment) => $appointment->slot->start_time)

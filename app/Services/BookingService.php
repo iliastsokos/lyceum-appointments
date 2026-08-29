@@ -62,9 +62,9 @@ class BookingService
                 Notification::create([
                     'user_id' => $lockedSlot->teacher_id,
                     'type' => 'appointment_booked',
-                    'title' => 'New appointment',
+                    'title' => 'Νέο ραντεβού',
                     'message' => sprintf(
-                        'Guardian %s booked an appointment for %s at %s.',
+                        'Ο κηδεμόνας %s έκλεισε ραντεβού για τον/την %s στις %s.',
                         $guardian->full_name,
                         $child->full_name,
                         substr($lockedSlot->start_time, 0, 5),
@@ -120,9 +120,9 @@ class BookingService
             Notification::create([
                 'user_id' => $locked->teacher_id,
                 'type' => 'appointment_cancelled',
-                'title' => 'Appointment cancelled',
+                'title' => 'Ακύρωση ραντεβού',
                 'message' => sprintf(
-                    'Guardian %s cancelled the appointment at %s.',
+                    'Ο κηδεμόνας %s ακύρωσε το ραντεβού στις %s.',
                     $locked->guardian->full_name,
                     $slot ? substr($slot->start_time, 0, 5) : '',
                 ),
