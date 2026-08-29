@@ -9,6 +9,7 @@ use App\Http\Requests\Admin\StoreGuardianRequest;
 use App\Http\Requests\Admin\UpdateGuardianRequest;
 use App\Models\User;
 use App\Services\AccountProvisioningService;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -91,5 +92,25 @@ class GuardianController extends Controller
         ]);
 
         return redirect()->route('admin.guardians.index')->with('status', 'guardian-status-updated');
+    }
+
+    public function destroy(User $guardian): RedirectResponse
+    {
+        abort_unless($guardian->isGuardian(), 404);
+        $this->authorize('delete', $guardian);
+
+        try {
+            $guardian->delete();
+        } catch (QueryException $e) {
+            if ($e->getCode() !== '23000') {
+                throw $e;
+            }
+
+            return redirect()->route('admin.guardians.index')->withErrors([
+                'guardian' => 'Δεν είναι δυνατή η διαγραφή: ο κηδεμόνας έχει καταχωρημένα παιδιά ή ιστορικό ραντεβού. Χρησιμοποιήστε απενεργοποίηση αντ\' αυτού.',
+            ]);
+        }
+
+        return redirect()->route('admin.guardians.index')->with('status', 'guardian-deleted');
     }
 }

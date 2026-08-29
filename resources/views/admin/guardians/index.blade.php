@@ -19,6 +19,12 @@
                 </div>
             @endif
 
+            @if ($errors->any())
+                <div class="bg-red-50 border border-red-300 text-red-900 rounded-md p-4 text-sm">
+                    {{ $errors->first() }}
+                </div>
+            @endif
+
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <form method="GET" class="flex gap-2">
@@ -61,6 +67,14 @@
                                                 {{ $guardian->status->value === 'active' ? __('Απενεργοποίηση') : __('Ενεργοποίηση') }}
                                             </button>
                                         </form>
+                                        <x-confirm-form-button
+                                            :action="route('admin.guardians.destroy', $guardian)"
+                                            method="DELETE"
+                                            :title="__('Διαγραφή αυτού του κηδεμόνα;')"
+                                            :message="__('Αυτή η ενέργεια δεν αναιρείται. Αν ο κηδεμόνας έχει καταχωρημένα παιδιά ή ιστορικό ραντεβού, η διαγραφή θα αποτύχει — χρησιμοποιήστε απενεργοποίηση σε αυτή την περίπτωση.')"
+                                            :confirm-text="__('Διαγραφή')"
+                                            button-class="text-red-600 hover:text-red-900"
+                                        >{{ __('Διαγραφή') }}</x-confirm-form-button>
                                     </td>
                                 </tr>
                             @empty

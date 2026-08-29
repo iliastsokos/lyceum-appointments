@@ -19,6 +19,12 @@
                 </div>
             @endif
 
+            @if ($errors->any())
+                <div class="bg-red-50 border border-red-300 text-red-900 rounded-md p-4 text-sm">
+                    {{ $errors->first() }}
+                </div>
+            @endif
+
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <form method="GET" class="flex gap-2">
@@ -53,6 +59,7 @@
                                         </span>
                                     </td>
                                     <td class="py-3 pr-4 text-right space-x-3">
+                                        <a href="{{ route('admin.teachers.availability.index', $teacher) }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Διαθεσιμότητα') }}</a>
                                         <a href="{{ route('admin.teachers.edit', $teacher) }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Επεξεργασία') }}</a>
                                         <form method="POST" action="{{ route('admin.teachers.toggle-status', $teacher) }}" class="inline">
                                             @csrf
@@ -61,6 +68,14 @@
                                                 {{ $teacher->status->value === 'active' ? __('Απενεργοποίηση') : __('Ενεργοποίηση') }}
                                             </button>
                                         </form>
+                                        <x-confirm-form-button
+                                            :action="route('admin.teachers.destroy', $teacher)"
+                                            method="DELETE"
+                                            :title="__('Διαγραφή αυτού του εκπαιδευτικού;')"
+                                            :message="__('Αυτή η ενέργεια δεν αναιρείται. Αν ο εκπαιδευτικός έχει ιστορικό διαθεσιμότητας ή ραντεβού, η διαγραφή θα αποτύχει — χρησιμοποιήστε απενεργοποίηση σε αυτή την περίπτωση.')"
+                                            :confirm-text="__('Διαγραφή')"
+                                            button-class="text-red-600 hover:text-red-900"
+                                        >{{ __('Διαγραφή') }}</x-confirm-form-button>
                                     </td>
                                 </tr>
                             @empty

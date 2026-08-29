@@ -182,4 +182,70 @@ class UserManagementTest extends TestCase
         $response->assertSee('Findme');
         $response->assertDontSee('Other Teacher');
     }
+
+    public function test_admin_can_delete_a_teacher_with_no_history(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $teacher = User::factory()->teacher()->create();
+
+        $this->actingAs($admin)->delete(route('admin.teachers.destroy', $teacher))
+            ->assertRedirect(route('admin.teachers.index'));
+
+        $this->assertDatabaseMissing('users', ['id' => $teacher->id]);
+    }
+
+    public function test_admin_cannot_delete_a_teacher_with_availability_history(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $teacher = User::factory()->teacher()->create();
+        \App\Models\Availability::factory()->for($teacher, 'teacher')->create();
+
+        $response = $this->actingAs($admin)->delete(route('admin.teachers.destroy', $teacher));
+
+        $response->assertRedirect(route('admin.teachers.index'));
+        $response->assertSessionHasErrors('teacher');
+        $this->assertDatabaseHas('users', ['id' => $teacher->id]);
+    }
+
+    public function test_non_admin_cannot_delete_a_teacher(): void
+    {
+        $otherTeacher = User::factory()->teacher()->create();
+        $teacher = User::factory()->teacher()->create();
+
+        $this->actingAs($otherTeacher)->delete(route('admin.teachers.destroy', $teacher))->assertForbidden();
+        $this->assertDatabaseHas('users', ['id' => $teacher->id]);
+    }
+
+    public function test_admin_can_delete_a_guardian_with_no_children(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $guardian = User::factory()->guardian()->create();
+
+        $this->actingAs($admin)->delete(route('admin.guardians.destroy', $guardian))
+            ->assertRedirect(route('admin.guardians.index'));
+
+        $this->assertDatabaseMissing('users', ['id' => $guardian->id]);
+    }
+
+    public function test_admin_cannot_delete_a_guardian_with_children(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $guardian = User::factory()->guardian()->create();
+        \App\Models\Child::factory()->for($guardian, 'guardian')->create();
+
+        $response = $this->actingAs($admin)->delete(route('admin.guardians.destroy', $guardian));
+
+        $response->assertRedirect(route('admin.guardians.index'));
+        $response->assertSessionHasErrors('guardian');
+        $this->assertDatabaseHas('users', ['id' => $guardian->id]);
+    }
+
+    public function test_non_admin_cannot_delete_a_guardian(): void
+    {
+        $teacher = User::factory()->teacher()->create();
+        $guardian = User::factory()->guardian()->create();
+
+        $this->actingAs($teacher)->delete(route('admin.guardians.destroy', $guardian))->assertForbidden();
+        $this->assertDatabaseHas('users', ['id' => $guardian->id]);
+    }
 }

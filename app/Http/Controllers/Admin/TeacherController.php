@@ -9,6 +9,7 @@ use App\Http\Requests\Admin\StoreTeacherRequest;
 use App\Http\Requests\Admin\UpdateTeacherRequest;
 use App\Models\User;
 use App\Services\AccountProvisioningService;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -89,5 +90,25 @@ class TeacherController extends Controller
         ]);
 
         return redirect()->route('admin.teachers.index')->with('status', 'teacher-status-updated');
+    }
+
+    public function destroy(User $teacher): RedirectResponse
+    {
+        abort_unless($teacher->isTeacher(), 404);
+        $this->authorize('delete', $teacher);
+
+        try {
+            $teacher->delete();
+        } catch (QueryException $e) {
+            if ($e->getCode() !== '23000') {
+                throw $e;
+            }
+
+            return redirect()->route('admin.teachers.index')->withErrors([
+                'teacher' => 'Δεν είναι δυνατή η διαγραφή: ο εκπαιδευτικός έχει ιστορικό διαθεσιμότητας ή ραντεβού. Χρησιμοποιήστε απενεργοποίηση αντ\' αυτού.',
+            ]);
+        }
+
+        return redirect()->route('admin.teachers.index')->with('status', 'teacher-deleted');
     }
 }
