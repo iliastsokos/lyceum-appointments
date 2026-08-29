@@ -6,6 +6,7 @@ use App\Enums\ImportType;
 use App\Enums\SchoolClass;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Exceptions\UnreadableSpreadsheetException;
 use App\Models\ImportBatch;
 use App\Models\ImportError;
 use App\Models\User;
@@ -54,7 +55,19 @@ class ExcelImportService
     public function readRows(string $storagePath): array
     {
         $fullPath = Storage::disk('local')->path($storagePath);
-        $spreadsheet = IOFactory::load($fullPath);
+
+        try {
+            $spreadsheet = IOFactory::load($fullPath);
+        } catch (\Throwable $e) {
+            // A file can pass extension/MIME validation and still be an
+            // unreadable or corrupted workbook (or not a spreadsheet at
+            // all, despite the .xlsx name). Never let a parser exception
+            // bubble into a raw 500 — treat it as "not a valid file."
+            Log::warning('Import file could not be parsed', ['path' => $storagePath, 'exception' => $e->getMessage()]);
+
+            throw new UnreadableSpreadsheetException;
+        }
+
         $sheet = $spreadsheet->getActiveSheet();
         $data = $sheet->toArray(null, false, false, false);
 

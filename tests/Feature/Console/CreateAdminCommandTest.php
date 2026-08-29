@@ -17,7 +17,7 @@ class CreateAdminCommandTest extends TestCase
             '--first-name' => 'Admin',
             '--last-name' => 'User',
             '--email' => 'admin@example.gr',
-            '--password' => 'a-secure-password',
+            '--password' => 'ASecurePass123',
         ])->assertSuccessful();
 
         $admin = User::where('email', 'admin@example.gr')->firstOrFail();
@@ -33,7 +33,7 @@ class CreateAdminCommandTest extends TestCase
             '--first-name' => 'Admin',
             '--last-name' => 'Two',
             '--email' => 'admin@example.gr',
-            '--password' => 'a-secure-password',
+            '--password' => 'ASecurePass123',
         ])->assertFailed();
 
         $this->assertSame(1, User::where('email', 'admin@example.gr')->count());

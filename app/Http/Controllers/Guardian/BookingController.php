@@ -53,7 +53,7 @@ class BookingController extends Controller
 
     public function confirm(Request $request, User $teacher, AppointmentSlot $slot): View
     {
-        abort_unless($teacher->isTeacher(), 404);
+        abort_unless($teacher->isTeacher() && $teacher->isActive(), 404);
         abort_unless($slot->teacher_id === $teacher->id, 404);
         abort_unless($slot->status === SlotStatus::Available, 404);
 
@@ -68,7 +68,7 @@ class BookingController extends Controller
 
     public function store(Request $request, User $teacher, AppointmentSlot $slot): RedirectResponse
     {
-        abort_unless($teacher->isTeacher(), 404);
+        abort_unless($teacher->isTeacher() && $teacher->isActive(), 404);
         abort_unless($slot->teacher_id === $teacher->id, 404);
 
         $validated = $request->validate([

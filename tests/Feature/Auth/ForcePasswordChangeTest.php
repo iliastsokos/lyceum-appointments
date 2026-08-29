@@ -24,15 +24,15 @@ class ForcePasswordChangeTest extends TestCase
         $guardian = User::factory()->guardian()->mustChangePassword()->create();
 
         $response = $this->actingAs($guardian)->put(route('password.force-change.update'), [
-            'password' => 'a-new-secure-password',
-            'password_confirmation' => 'a-new-secure-password',
+            'password' => 'ANewSecurePass123',
+            'password_confirmation' => 'ANewSecurePass123',
         ]);
 
         $response->assertRedirect(route('dashboard'));
 
         $guardian->refresh();
         $this->assertFalse($guardian->must_change_password);
-        $this->assertTrue(Hash::check('a-new-secure-password', $guardian->password));
+        $this->assertTrue(Hash::check('ANewSecurePass123', $guardian->password));
 
         // No longer forced onto the change-password screen.
         $this->actingAs($guardian)->get(route('guardian.dashboard'))->assertOk();

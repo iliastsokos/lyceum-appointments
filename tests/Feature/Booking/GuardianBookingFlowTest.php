@@ -98,6 +98,31 @@ class GuardianBookingFlowTest extends TestCase
         ]);
     }
 
+    public function test_guardian_cannot_reach_confirm_page_for_a_deactivated_teacher(): void
+    {
+        $teacher = User::factory()->teacher()->inactive()->create();
+        $guardian = User::factory()->guardian()->create();
+        $slot = $this->makeSlot($teacher);
+
+        $this->actingAs($guardian)->get(route('guardian.book.confirm', [
+            'teacher' => $teacher, 'slot' => $slot,
+        ]))->assertNotFound();
+    }
+
+    public function test_guardian_cannot_book_a_slot_for_a_deactivated_teacher(): void
+    {
+        $teacher = User::factory()->teacher()->inactive()->create();
+        $guardian = User::factory()->guardian()->create();
+        $child = Child::factory()->for($guardian, 'guardian')->create();
+        $slot = $this->makeSlot($teacher);
+
+        $this->actingAs($guardian)->post(route('guardian.book.store', [
+            'teacher' => $teacher, 'slot' => $slot,
+        ]), ['child_id' => $child->id])->assertNotFound();
+
+        $this->assertDatabaseMissing('appointments', ['slot_id' => $slot->id]);
+    }
+
     public function test_guardian_cannot_book_a_slot_for_another_guardians_child(): void
     {
         $guardian = User::factory()->guardian()->create();

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\ImportType;
+use App\Exceptions\UnreadableSpreadsheetException;
 use App\Http\Controllers\Controller;
 use App\Models\ImportBatch;
 use App\Services\ExcelImportService;
@@ -39,13 +40,19 @@ class ImportController extends Controller
         $importType = $this->resolveType($type);
 
         $request->validate([
-            'file' => ['required', 'file', 'extensions:xlsx', 'max:5120'],
+            'file' => ['required', 'file', 'extensions:xlsx', 'mimes:xlsx', 'max:5120'],
         ]);
 
         $file = $request->file('file');
         $storagePath = $this->importService->storeUpload($file);
 
-        ['headers' => $headers, 'rows' => $rows] = $this->importService->readRows($storagePath);
+        try {
+            ['headers' => $headers, 'rows' => $rows] = $this->importService->readRows($storagePath);
+        } catch (UnreadableSpreadsheetException $e) {
+            $this->importService->deleteUpload($storagePath);
+
+            return back()->withErrors(['file' => $e->getMessage()]);
+        }
 
         $missing = $this->importService->missingHeaders($headers, $importType);
 
@@ -95,7 +102,16 @@ class ImportController extends Controller
                 ->withErrors(['file' => 'This import preview has expired. Please upload the file again.']);
         }
 
-        ['headers' => $headers, 'rows' => $rows] = $this->importService->readRows($pending['path']);
+        try {
+            ['headers' => $headers, 'rows' => $rows] = $this->importService->readRows($pending['path']);
+        } catch (UnreadableSpreadsheetException $e) {
+            $this->importService->deleteUpload($pending['path']);
+            Session::forget("import_pending.{$request->string('token')}");
+
+            return redirect()->route('admin.imports.show', $importType->value)
+                ->withErrors(['file' => $e->getMessage()]);
+        }
+
         $missing = $this->importService->missingHeaders($headers, $importType);
 
         if ($missing !== [] || $rows->isEmpty()) {

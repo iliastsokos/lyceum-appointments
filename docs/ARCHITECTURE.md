@@ -1,6 +1,20 @@
 # Architecture — Lyceum Parent–Teacher Appointment Booking System
 
-Status: Phases 1–7 complete. This document is updated as later phases land.
+Status: Phases 1–8 complete. This document is updated as later phases land.
+
+## Phase 8 note — security audit
+
+Systematic pass against spec §38's checklist. Grep-based checks confirmed clean with no findings: no CSRF-exempted routes, no raw/interpolated SQL (`DB::raw`/`whereRaw`/`DB::statement`), no unescaped Blade output (`{!! !!}`), no `$guarded` mass-assignment models (every model uses an explicit `#[Fillable]` allowlist), no hardcoded credentials, no `Gate::before` bypass, every POST form has a matching `@csrf`.
+
+A subagent audited every controller method that receives a route-bound model for IDOR. One "finding" turned out to be a false positive worth recording: `Admin\TeacherController::update()`/`GuardianController::update()` looked unauthorized at the controller level, but authorization actually happens in `UpdateTeacherRequest`/`UpdateGuardianRequest::authorize()` — a valid, idiomatic Laravel pattern the audit's controller-only scope couldn't see. Added regression tests (`UserManagementTest`) that exercise this end-to-end (cross-role 403, route-id-mismatch 404) rather than just trusting the code reading. The audit also surfaced one genuine small gap, fixed: `BookingController::confirm()`/`store()` checked the slot belonged to the teacher but not that the teacher was still *active* (only `pickDate()` did) — a stale bookmarked booking link for a since-deactivated teacher would have still worked. Fixed and tested.
+
+Other fixes made this phase:
+- **Password policy strengthened app-wide**: `Password::defaults()` now requires 10+ characters, mixed case, and a number (was Laravel's bare 8-character default), set once in `AppServiceProvider::boot()` so it applies to every password-setting flow (registration, reset, profile change, forced first-login change, admin creation) without touching each call site. Deliberately does **not** add `->uncompromised()` — that check calls the HaveIBeenPwned API on every submission, which would make core auth depend on outbound internet access being available and fast; not a dependency to introduce for shared hosting.
+- **Rate limiting extended**: `register`, `forgot-password` (POST), and `confirm-password` (POST) now carry `throttle:6,1`, matching the pattern Breeze already used for email verification. Login already had its own smarter per-email+IP lockout (Breeze's `LoginRequest`), untouched.
+- **`SESSION_ENCRYPT=true`**: defense-in-depth for a session store that may reference personal data about guardians/children — encrypts the session payload at rest with `APP_KEY`, independent of transport security.
+- **Unreadable-spreadsheet handling**: `ExcelImportService::readRows()` previously let a PhpSpreadsheet parse exception (a corrupted file, or a real zip that isn't a real workbook, despite passing extension/MIME checks) bubble into a raw 500. Now caught and converted into `UnreadableSpreadsheetException` → the same friendly "please upload a valid file" message, logged server-side with no user-facing detail. Added `mimes:xlsx` alongside the existing `extensions:xlsx` rule for content-aware validation, and a test using a real (but internally garbage) zip file to prove the graceful-failure path, not just a plain-text-renamed-to-.xlsx case.
+- **`imports:clean-pending` command**: deletes abandoned import uploads (preview started, never confirmed) older than a configurable age — data minimization per spec §25's "do not permanently retain uploaded files unless necessary." Optional cron entry documented in the Phase 10 deployment guide.
+- **`.env.example` rewritten** to match the app's actual production-appropriate defaults (MySQL, `APP_TIMEZONE`, `QUEUE_CONNECTION=sync`, `SESSION_SECURE_COOKIE=true` for production) instead of the generic Laravel skeleton it still had from Phase 1 — `config/session.php`'s `secure` flag defaults to *off* unless explicitly set, so this needed to be an explicit, documented production setting rather than assumed.
 
 ## Phase 7 note — UI/UX polish
 

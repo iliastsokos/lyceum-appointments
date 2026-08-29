@@ -105,6 +105,54 @@ class UserManagementTest extends TestCase
         $this->actingAs($admin)->get(route('admin.teachers.edit', $guardian))->assertNotFound();
     }
 
+    public function test_admin_cannot_update_teacher_through_guardian_route_id_mismatch(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $guardian = User::factory()->guardian()->create(['first_name' => 'Original']);
+
+        $this->actingAs($admin)->put(route('admin.teachers.update', $guardian), [
+            'first_name' => 'Hacked', 'last_name' => 'Name', 'email' => $guardian->email, 'subject' => 'Physics',
+        ])->assertNotFound();
+
+        $this->assertSame('Original', $guardian->fresh()->first_name);
+    }
+
+    public function test_non_admin_cannot_update_a_teacher(): void
+    {
+        $otherTeacher = User::factory()->teacher()->create();
+        $teacher = User::factory()->teacher()->create(['first_name' => 'Original']);
+
+        $this->actingAs($otherTeacher)->put(route('admin.teachers.update', $teacher), [
+            'first_name' => 'Hacked', 'last_name' => 'Name', 'email' => $teacher->email, 'subject' => 'Physics',
+        ])->assertForbidden();
+
+        $this->assertSame('Original', $teacher->fresh()->first_name);
+    }
+
+    public function test_non_admin_cannot_update_a_guardian(): void
+    {
+        $teacher = User::factory()->teacher()->create();
+        $guardian = User::factory()->guardian()->create(['first_name' => 'Original']);
+
+        $this->actingAs($teacher)->put(route('admin.guardians.update', $guardian), [
+            'first_name' => 'Hacked', 'last_name' => 'Name', 'email' => $guardian->email,
+        ])->assertForbidden();
+
+        $this->assertSame('Original', $guardian->fresh()->first_name);
+    }
+
+    public function test_admin_can_update_a_teacher(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $teacher = User::factory()->teacher()->create(['first_name' => 'Original']);
+
+        $this->actingAs($admin)->put(route('admin.teachers.update', $teacher), [
+            'first_name' => 'Updated', 'last_name' => $teacher->last_name, 'email' => $teacher->email, 'subject' => $teacher->subject,
+        ])->assertRedirect(route('admin.teachers.index'));
+
+        $this->assertSame('Updated', $teacher->fresh()->first_name);
+    }
+
     public function test_admin_can_view_teacher_create_and_edit_forms(): void
     {
         $admin = User::factory()->admin()->create();
