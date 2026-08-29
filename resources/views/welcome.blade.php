@@ -252,7 +252,7 @@
             <div class="border-t border-white/10">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 text-xs text-[#9fc9c9] flex flex-col sm:flex-row items-center justify-between gap-2">
                     <span>&copy; {{ date('Y') }} 1ο ΓΕΛ Ραφήνας &mdash; Σύστημα Ραντεβού</span>
-                    <span>Europe/Athens</span>
+                    <span>Σχεδιασμός - Ανάπτυξη: Τσώκος Ηλίας</span>
                 </div>
             </div>
         </footer>
