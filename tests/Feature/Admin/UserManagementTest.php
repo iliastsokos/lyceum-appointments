@@ -1,0 +1,137 @@
+<?php
+
+namespace Tests\Feature\Admin;
+
+use App\Enums\UserRole;
+use App\Enums\UserStatus;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
+use Tests\TestCase;
+
+class UserManagementTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_admin_can_create_a_teacher_with_generated_temporary_password(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $response = $this->actingAs($admin)->post(route('admin.teachers.store'), [
+            'first_name' => 'Maria',
+            'last_name' => 'Papadopoulou',
+            'email' => 'maria@example.gr',
+            'subject' => 'Mathematics',
+        ]);
+
+        $response->assertRedirect(route('admin.teachers.index'));
+        $response->assertSessionHas('temporaryPassword');
+
+        $teacher = User::where('email', 'maria@example.gr')->firstOrFail();
+        $this->assertSame(UserRole::Teacher, $teacher->role);
+        $this->assertTrue($teacher->must_change_password);
+        $this->assertTrue(Hash::check(session('temporaryPassword'), $teacher->password));
+    }
+
+    public function test_admin_can_create_a_guardian_with_generated_temporary_password(): void
+    {
+        $admin = User::factory()->admin()->create();
+
+        $response = $this->actingAs($admin)->post(route('admin.guardians.store'), [
+            'first_name' => 'Giorgos',
+            'last_name' => 'Papadopoulos',
+            'email' => 'gpap@example.gr',
+            'phone' => '6900000000',
+        ]);
+
+        $response->assertRedirect(route('admin.guardians.index'));
+
+        $guardian = User::where('email', 'gpap@example.gr')->firstOrFail();
+        $this->assertSame(UserRole::Guardian, $guardian->role);
+        $this->assertTrue($guardian->must_change_password);
+    }
+
+    public function test_admin_cannot_create_teacher_with_invalid_role_via_duplicate_email(): void
+    {
+        $admin = User::factory()->admin()->create();
+        User::factory()->teacher()->create(['email' => 'taken@example.gr']);
+
+        $response = $this->actingAs($admin)->post(route('admin.teachers.store'), [
+            'first_name' => 'Nikos',
+            'last_name' => 'Ioannidis',
+            'email' => 'taken@example.gr',
+            'subject' => 'Physics',
+        ]);
+
+        $response->assertSessionHasErrors('email');
+    }
+
+    public function test_admin_can_deactivate_and_reactivate_a_teacher(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $teacher = User::factory()->teacher()->create();
+
+        $this->actingAs($admin)->patch(route('admin.teachers.toggle-status', $teacher))
+            ->assertRedirect(route('admin.teachers.index'));
+        $this->assertSame(UserStatus::Inactive, $teacher->fresh()->status);
+
+        $this->actingAs($admin)->patch(route('admin.teachers.toggle-status', $teacher));
+        $this->assertSame(UserStatus::Active, $teacher->fresh()->status);
+    }
+
+    public function test_deactivated_teacher_cannot_log_into_protected_area(): void
+    {
+        $teacher = User::factory()->teacher()->inactive()->create();
+
+        $this->actingAs($teacher)->get(route('teacher.dashboard'))->assertForbidden();
+    }
+
+    public function test_non_admin_cannot_create_teachers(): void
+    {
+        $guardian = User::factory()->guardian()->create();
+
+        $this->actingAs($guardian)->post(route('admin.teachers.store'), [
+            'first_name' => 'X', 'last_name' => 'Y', 'email' => 'x@example.gr', 'subject' => 'Physics',
+        ])->assertForbidden();
+    }
+
+    public function test_admin_cannot_edit_teacher_through_guardian_route_id_mismatch(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $guardian = User::factory()->guardian()->create();
+
+        // Attempting to edit a guardian's user id via the teachers admin route must 404,
+        // not silently save teacher-only fields onto a guardian record.
+        $this->actingAs($admin)->get(route('admin.teachers.edit', $guardian))->assertNotFound();
+    }
+
+    public function test_admin_can_view_teacher_create_and_edit_forms(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $teacher = User::factory()->teacher()->create();
+
+        $this->actingAs($admin)->get(route('admin.teachers.create'))->assertOk();
+        $this->actingAs($admin)->get(route('admin.teachers.edit', $teacher))->assertOk();
+    }
+
+    public function test_admin_can_view_guardian_create_and_edit_forms(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $guardian = User::factory()->guardian()->create();
+
+        $this->actingAs($admin)->get(route('admin.guardians.create'))->assertOk();
+        $this->actingAs($admin)->get(route('admin.guardians.edit', $guardian))->assertOk();
+    }
+
+    public function test_admin_search_filters_teacher_list(): void
+    {
+        $admin = User::factory()->admin()->create();
+        User::factory()->teacher()->create(['first_name' => 'Findme', 'last_name' => 'Teacher']);
+        User::factory()->teacher()->create(['first_name' => 'Other', 'last_name' => 'Teacher']);
+
+        $response = $this->actingAs($admin)->get(route('admin.teachers.index', ['search' => 'Findme']));
+
+        $response->assertSee('Findme');
+        $response->assertDontSee('Other Teacher');
+    }
+}
