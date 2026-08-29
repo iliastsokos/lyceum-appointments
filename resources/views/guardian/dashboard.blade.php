@@ -37,9 +37,13 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                 <div class="flex items-center justify-between">
                     <h3 class="text-lg font-medium text-gray-900">{{ __('Προσεχή Ραντεβού') }}</h3>
-                    <div class="flex gap-4 text-sm">
-                        <a href="{{ route('guardian.book.teachers') }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Κλείσιμο Ραντεβού') }}</a>
-                        <a href="{{ route('guardian.appointments.index') }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Προβολή Όλων') }}</a>
+                    <div class="flex gap-3">
+                        <a href="{{ route('guardian.book.teachers') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-sm text-white hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
+                            {{ __('Κλείσιμο Ραντεβού') }}
+                        </a>
+                        <a href="{{ route('guardian.appointments.index') }}" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-sm text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                            {{ __('Προβολή Όλων') }}
+                        </a>
                     </div>
                 </div>
 

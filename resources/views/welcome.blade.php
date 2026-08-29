@@ -76,14 +76,13 @@
             <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24 grid lg:grid-cols-2 gap-12 items-center">
                 <div>
                     <span class="inline-block px-3 py-1 rounded-full bg-[#0e6e73]/10 text-[#0e6e73] text-xs font-bold uppercase tracking-wider">
-                        1ο ΓΕΛ Ραφήνας
+                        ΓΕΛ Ραφήνας
                     </span>
                     <h1 class="mt-5 text-4xl sm:text-5xl font-extrabold text-slate-800 leading-tight">
-                        Ραντεβού γονέων &ndash; εκπαιδευτικών,
-                        <span class="text-[#0e6e73]">εύκολα και γρήγορα</span>
+                        Ραντεβού γονέων &ndash; εκπαιδευτικών
                     </h1>
                     <p class="mt-5 text-lg text-slate-600 max-w-xl">
-                        Κλείστε ραντεβού με τους εκπαιδευτικούς του σχολείου σε λίγα κλικ, δείτε άμεσα ποιες ώρες είναι διαθέσιμες και λάβετε ειδοποίηση για κάθε αλλαγή — χωρίς τηλεφωνήματα και χαμένο χρόνο.
+                        Κλείστε ραντεβού με τους εκπαιδευτικούς του σχολείου σε λίγα κλικ, δείτε άμεσα ποιες ώρες είναι διαθέσιμες.
                     </p>
                     <div class="mt-8 flex flex-col sm:flex-row gap-4">
                         <a href="{{ route('login') }}" class="inline-flex items-center justify-center px-6 py-3 rounded-md bg-[#0e6e73] text-white font-semibold shadow-sm hover:bg-[#0b5a5e] transition">
