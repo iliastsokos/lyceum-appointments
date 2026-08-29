@@ -35,11 +35,20 @@
                 @endif
 
                 @php($nothingToImport = $summary['valid'] === 0)
-                <form method="POST" action="{{ route('admin.imports.commit', $type->value) }}" class="mt-6 flex items-center justify-center gap-4">
+                <form
+                    method="POST"
+                    action="{{ route('admin.imports.commit', $type->value) }}"
+                    class="mt-6 flex items-center justify-center gap-4"
+                    x-data="{ submitting: false }"
+                    x-on:submit="submitting = true"
+                >
                     @csrf
                     <input type="hidden" name="token" value="{{ $token }}" />
                     <a href="{{ route('admin.imports.show', $type->value) }}" class="text-sm text-gray-600 hover:text-gray-900">{{ __('Cancel') }}</a>
-                    <x-primary-button :disabled="$nothingToImport">{{ __('Confirm Import') }}</x-primary-button>
+                    <x-primary-button x-bind:disabled="submitting || {{ $nothingToImport ? 'true' : 'false' }}">
+                        <span x-show="!submitting">{{ __('Confirm Import') }}</span>
+                        <span x-show="submitting" x-cloak>{{ __('Importing...') }}</span>
+                    </x-primary-button>
                 </form>
             </div>
 

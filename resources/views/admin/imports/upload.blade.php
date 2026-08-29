@@ -30,13 +30,23 @@
                     @endif
                 </p>
 
-                <form method="POST" action="{{ route('admin.imports.preview', $type->value) }}" enctype="multipart/form-data" class="mt-4">
+                <form
+                    method="POST"
+                    action="{{ route('admin.imports.preview', $type->value) }}"
+                    enctype="multipart/form-data"
+                    class="mt-4"
+                    x-data="{ submitting: false }"
+                    x-on:submit="submitting = true"
+                >
                     @csrf
                     <input type="file" name="file" accept=".xlsx" required class="block w-full text-sm text-gray-600" />
                     <p class="mt-1 text-xs text-gray-400">{{ __('.xlsx files only, up to 5 MB.') }}</p>
 
                     <div class="flex items-center justify-end mt-4">
-                        <x-primary-button>{{ __('Preview Import') }}</x-primary-button>
+                        <x-primary-button x-bind:disabled="submitting">
+                            <span x-show="!submitting">{{ __('Preview Import') }}</span>
+                            <span x-show="submitting" x-cloak>{{ __('Uploading...') }}</span>
+                        </x-primary-button>
                     </div>
                 </form>
             </div>

@@ -37,7 +37,13 @@
                         <a href="{{ route('guardian.children.create') }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Add a child') }}</a>
                     </p>
                 @else
-                    <form method="POST" action="{{ route('guardian.book.store', ['teacher' => $teacher, 'slot' => $slot]) }}" class="mt-6">
+                    <form
+                        method="POST"
+                        action="{{ route('guardian.book.store', ['teacher' => $teacher, 'slot' => $slot]) }}"
+                        class="mt-6"
+                        x-data="{ submitting: false }"
+                        x-on:submit="submitting = true"
+                    >
                         @csrf
                         <x-input-label for="child_id" :value="__('Student')" />
                         <select id="child_id" name="child_id" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
@@ -48,7 +54,10 @@
                         <x-input-error class="mt-2" :messages="$errors->get('child_id')" />
 
                         <div class="flex items-center justify-end mt-6">
-                            <x-primary-button>{{ __('Confirm Appointment') }}</x-primary-button>
+                            <x-primary-button x-bind:disabled="submitting">
+                                <span x-show="!submitting">{{ __('Confirm Appointment') }}</span>
+                                <span x-show="submitting" x-cloak>{{ __('Booking...') }}</span>
+                            </x-primary-button>
                         </div>
                     </form>
                 @endif

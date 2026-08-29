@@ -1,6 +1,14 @@
 # Architecture — Lyceum Parent–Teacher Appointment Booking System
 
-Status: Phases 1–6 complete. This document is updated as later phases land.
+Status: Phases 1–7 complete. This document is updated as later phases land.
+
+## Phase 7 note — UI/UX polish
+
+- **Custom error pages** (401/403/404/419/429/500/503) replace Laravel's defaults. Deliberately self-contained — no `@vite`, no Blade components — because the 500 page must still render a friendly message even if the compiled asset pipeline itself is what's broken. Verified end-to-end (not just the isolated view) with a test that forces `app.debug=false`, throws a real exception through a real route, and asserts the exception message never reaches the response.
+- **Confirmation dialogs**: replaced every native `confirm()` (cancel appointment, remove child, remove availability window) with a reusable `<x-confirm-form-button>` — a proper `role="dialog"`/`aria-modal` element with Escape-to-close, click-outside-to-close, and focus moved to the Cancel button on open (and back to the trigger on Escape).
+- **Loading states**: the three forms doing meaningful server work while the user waits (booking confirmation, import file upload, import commit) disable their submit button and swap its label the instant they're submitted, via a small `x-data="{ submitting: false }"` pattern — prevents accidental double-submit and gives feedback on slower connections.
+- **Accessibility fixes found in the existing Breeze scaffolding**: two icon/avatar-only trigger buttons (the profile dropdown, the notification bell) had `focus:outline-none` with no replacement focus indicator — fixed by adding `focus:ring-2`. Slot-picker buttons (teacher availability grid, guardian booking date grid) were bumped to a 44px minimum touch target (`min-h-11`), matching the widely-used accessible touch-target guideline — the original `py-2` sizing measured closer to 32px.
+- Verified via the dev server rather than a full interactive browser session (no browser-automation tool was available in this environment): confirmed the correct rebuilt CSS/JS assets are served, the dialog's ARIA/Alpine markup renders exactly as written, the loading-state markup is present on all three target forms, and the 404/403 custom pages render for real unauthenticated/cross-role requests.
 
 ## Phase 6 note — bulk Excel import
 

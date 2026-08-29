@@ -67,11 +67,13 @@
                                 <div class="flex gap-3 text-sm">
                                     <a href="{{ route('teacher.availability.show', $availability) }}" class="text-indigo-600 hover:text-indigo-900">{{ __('View Slots') }}</a>
                                     @if ($availability->booked_count === 0)
-                                        <form method="POST" action="{{ route('teacher.availability.destroy', $availability) }}" onsubmit="return confirm('{{ __('Remove this availability window?') }}');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-900">{{ __('Remove') }}</button>
-                                        </form>
+                                        <x-confirm-form-button
+                                            :action="route('teacher.availability.destroy', $availability)"
+                                            method="DELETE"
+                                            :title="__('Remove this availability window?')"
+                                            :message="__('All of its available slots will be removed. This cannot be undone.')"
+                                            :confirm-text="__('Remove')"
+                                        >{{ __('Remove') }}</x-confirm-form-button>
                                     @endif
                                 </div>
                             </div>

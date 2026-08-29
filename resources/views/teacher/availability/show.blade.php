@@ -42,7 +42,7 @@
                             <button
                                 type="submit"
                                 @disabled($slot->status->value === 'booked')
-                                class="w-full text-xs font-medium border rounded-md py-2 px-1 {{ $colors }}"
+                                class="w-full min-h-11 text-xs font-medium border rounded-md py-2 px-1 {{ $colors }}"
                                 title="{{ $slot->status->label() }}"
                             >
                                 {{ substr($slot->start_time, 0, 5) }}

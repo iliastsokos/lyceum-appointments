@@ -22,11 +22,16 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                 <h3 class="text-sm font-medium text-gray-900">{{ __('Remove Child') }}</h3>
                 <p class="mt-1 text-sm text-gray-600">{{ __('This will permanently remove this child from your account.') }}</p>
-                <form method="POST" action="{{ route('guardian.children.destroy', $child) }}" class="mt-4" onsubmit="return confirm('{{ __('Are you sure you want to remove this child?') }}');">
-                    @csrf
-                    @method('DELETE')
-                    <x-secondary-button type="submit">{{ __('Remove Child') }}</x-secondary-button>
-                </form>
+                <div class="mt-4">
+                    <x-confirm-form-button
+                        :action="route('guardian.children.destroy', $child)"
+                        method="DELETE"
+                        :title="__('Remove this child?')"
+                        :message="__('This will permanently remove :name from your account. This cannot be undone.', ['name' => $child->full_name])"
+                        :confirm-text="__('Remove Child')"
+                        button-class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+                    >{{ __('Remove Child') }}</x-confirm-form-button>
+                </div>
             </div>
         </div>
     </div>

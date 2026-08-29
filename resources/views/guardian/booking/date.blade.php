@@ -30,11 +30,11 @@
                             @foreach ($slots as $slot)
                                 @if ($slot->status->value === 'available')
                                     <a href="{{ route('guardian.book.confirm', ['teacher' => $teacher, 'slot' => $slot]) }}"
-                                       class="text-center text-xs font-medium border rounded-md py-2 px-1 bg-green-100 text-green-800 border-green-300 hover:bg-green-200">
+                                       class="flex items-center justify-center min-h-11 text-center text-xs font-medium border rounded-md py-2 px-1 bg-green-100 text-green-800 border-green-300 hover:bg-green-200">
                                         🟢 {{ substr($slot->start_time, 0, 5) }}
                                     </a>
                                 @else
-                                    <span class="text-center text-xs font-medium border rounded-md py-2 px-1 bg-red-100 text-red-800 border-red-300 cursor-not-allowed">
+                                    <span class="flex items-center justify-center min-h-11 text-center text-xs font-medium border rounded-md py-2 px-1 bg-red-100 text-red-800 border-red-300 cursor-not-allowed">
                                         🔴 {{ substr($slot->start_time, 0, 5) }}
                                     </span>
                                 @endif

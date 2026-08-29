@@ -83,11 +83,15 @@
                                 <div class="mt-1 text-xs text-gray-400">{{ __('Booked') }}: {{ $appointment->booked_at->format('d/m/Y H:i') }}</div>
 
                                 @if (in_array($appointment->status->value, ['new', 'confirmed']))
-                                    <form method="POST" action="{{ route('guardian.appointments.cancel', $appointment) }}" class="mt-3" onsubmit="return confirm('{{ __('Are you sure you want to cancel this appointment?') }}');">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" class="text-sm text-red-600 hover:text-red-900">{{ __('Cancel Appointment') }}</button>
-                                    </form>
+                                    <div class="mt-3">
+                                        <x-confirm-form-button
+                                            :action="route('guardian.appointments.cancel', $appointment)"
+                                            method="PATCH"
+                                            :title="__('Cancel this appointment?')"
+                                            :message="__('The teacher will be notified and this time slot will become available to other guardians.')"
+                                            :confirm-text="__('Cancel Appointment')"
+                                        >{{ __('Cancel Appointment') }}</x-confirm-form-button>
+                                    </div>
                                 @endif
                             </div>
                         @endforeach
