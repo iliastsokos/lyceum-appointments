@@ -79,7 +79,7 @@
                         ΓΕΛ Ραφήνας
                     </span>
                     <h1 class="mt-5 text-4xl sm:text-5xl font-extrabold text-slate-800 leading-tight">
-                        Ραντεβού γονέων &ndash; εκπαιδευτικών
+                        Σύστημα προγραμματισμού συναντήσεων με τους/τις εκπαιδευτικούς
                     </h1>
                     <p class="mt-5 text-lg text-slate-600 max-w-xl">
                         Κλείστε ραντεβού με τους εκπαιδευτικούς του σχολείου σε λίγα κλικ, δείτε άμεσα ποιες ώρες είναι διαθέσιμες.
@@ -101,7 +101,7 @@
                             <span class="text-xs font-semibold text-[#0e6e73] bg-[#0e6e73]/10 px-2 py-1 rounded">Διαθέσιμες ώρες</span>
                         </div>
                         <div class="grid grid-cols-4 gap-2">
-                            @foreach (['17:00','17:05','17:10','17:15','17:20','17:25','17:30','17:35'] as $i => $time)
+                            @foreach (['10:00','10:05','10:10','10:15','10:20','10:25','10:30','10:35'] as $i => $time)
                                 <div class="text-center text-sm font-medium rounded-md py-2 border {{ $i === 2 ? 'bg-red-50 text-red-600 border-red-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200' }}">
                                     {{ $time }}
                                 </div>
