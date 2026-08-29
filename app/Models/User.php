@@ -72,4 +72,22 @@ class User extends Authenticatable
     {
         return $this->hasMany(Child::class, 'guardian_id');
     }
+
+    /**
+     * Availability windows authored by this user, when the user is a teacher.
+     *
+     * @return HasMany<Availability, $this>
+     */
+    public function availabilities(): HasMany
+    {
+        return $this->hasMany(Availability::class, 'teacher_id');
+    }
+
+    /**
+     * @return HasMany<AppointmentSlot, $this>
+     */
+    public function appointmentSlots(): HasMany
+    {
+        return $this->hasMany(AppointmentSlot::class, 'teacher_id');
+    }
 }

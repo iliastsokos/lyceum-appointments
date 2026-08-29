@@ -8,6 +8,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Guardian\ChildController;
 use App\Http\Controllers\Guardian\DashboardController as GuardianDashboardController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Teacher\AvailabilityController;
 use App\Http\Controllers\Teacher\DashboardController as TeacherDashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -37,6 +38,12 @@ Route::middleware(['auth', 'role:guardian'])->prefix('guardian')->name('guardian
 
 Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
     Route::get('/dashboard', [TeacherDashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/availability', [AvailabilityController::class, 'index'])->name('availability.index');
+    Route::post('/availability', [AvailabilityController::class, 'store'])->name('availability.store');
+    Route::get('/availability/{availability}', [AvailabilityController::class, 'show'])->name('availability.show');
+    Route::delete('/availability/{availability}', [AvailabilityController::class, 'destroy'])->name('availability.destroy');
+    Route::patch('/availability/slots/{slot}/toggle', [AvailabilityController::class, 'toggleSlot'])->name('availability.slots.toggle');
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {

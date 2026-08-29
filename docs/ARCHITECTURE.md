@@ -1,6 +1,15 @@
 # Architecture — Lyceum Parent–Teacher Appointment Booking System
 
-Status: Phase 1 (foundation) complete. This document is updated as later phases land.
+Status: Phases 1–3 complete. This document is updated as later phases land.
+
+## Phase 3 note — availability & slots
+
+`availability` (singular, matching the spec table name exactly) and `appointment_slots` were implemented as designed in §2/§4 below, via a dedicated `AvailabilityService` (mirrors the not-yet-built `BookingService`'s pattern of transaction + `lockForUpdate()` for anything that must be race-safe):
+
+- Creating an availability window validates: not in the past, `end > start`, window length is a multiple of 5 minutes, and — inside a locked transaction — no overlap with another *active* window for the same teacher/day. Slots are generated in the same transaction.
+- Removing a window (`AvailabilityService::deleteAvailability`) is blocked, under a row lock, if any of its slots are `booked` — matching §11's "never destructively modify already-booked appointments." The `appointment_slots.availability_id` FK is `cascadeOnDelete`, so once the guard passes, deleting the availability row cleans up its slots automatically.
+- Toggling a single slot (`available` ↔ `disabled`) is likewise locked and refuses to touch a `booked` slot.
+- All enum backing values across the schema are lowercase (`available`/`booked`/`disabled`, `active`/`cancelled`) for consistency with `UserRole`/`UserStatus` from Phase 2; human-facing casing comes from each enum's `label()` method, not the stored value.
 
 ## 1. Technology decision
 
