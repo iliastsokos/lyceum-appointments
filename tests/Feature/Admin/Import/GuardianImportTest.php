@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Models\ImportBatch;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Tests\Support\BuildsTestSpreadsheets;
 use Tests\TestCase;
 
@@ -14,6 +15,13 @@ class GuardianImportTest extends TestCase
     use BuildsTestSpreadsheets, RefreshDatabase;
 
     private array $headers = ['guardian_first_name', 'guardian_last_name', 'guardian_email', 'child_first_name', 'child_last_name', 'child_class'];
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        Storage::fake('local');
+    }
 
     public function test_guardian_with_multiple_children_creates_one_account_and_two_children(): void
     {

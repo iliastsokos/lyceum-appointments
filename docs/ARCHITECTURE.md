@@ -1,6 +1,13 @@
 # Architecture — Lyceum Parent–Teacher Appointment Booking System
 
-Status: Phases 1–9 complete. This document is updated as later phases land.
+Status: Phases 1–10 complete. This document is updated as later phases land.
+
+## Phase 10 note — production preparation
+
+- **`docs/DEPLOYMENT.md`**: the full Plesk/webhost.sch.gr deployment guide — requirements, database setup, both Plesk-UI and SSH upload paths, document root, storage permissions, migrations and first-admin creation (both with and without SSH, via Plesk Scheduled Tasks), SSL, production config caching, the optional `imports:clean-pending` cron entry, a pre-launch checklist, backup recommendations, and troubleshooting.
+- **Verified `php artisan config:cache`/`route:cache`/`view:cache` actually work on this codebase** rather than assuming they would — checked for the classic `env()`-outside-config-files bug (none found) and for closure-based routes, which can't be serialized by `route:cache` in some Laravel versions (none found; the one closure route, `/admin/imports`, cached and rendered correctly). Booted the app with all three caches active and hit several pages for real before recommending this in the deployment guide.
+- **Found and fixed a real test-hygiene bug while verifying storage permissions**: none of the Excel import tests used `Storage::fake()`, so every test run wrote real `.xlsx` files to `storage/app/private/imports/pending` with no cleanup — `RefreshDatabase` rolls back database rows, not filesystem writes. Over the course of this project's test runs this had silently accumulated **over 150 leftover files** in real project storage. Fixed by faking the `local` disk in every import test; one test (`test_uploaded_import_file_is_not_stored_under_the_public_webroot`) specifically needed the *real*, unfaked disk configuration to assert the actual security property, so `Storage::fake()` is called there only after capturing the real config value, not in a class-wide `setUp()`.
+- **`README.md`, `AGENTS.md`, `CLAUDE.md` rewritten**: these still held Laravel's generic skeleton content and Phase 1's "install Laravel Boost" bootstrap instructions respectively — both stale by this point. Replaced with a real project overview/quick-start and agent-facing guidance covering the specific non-obvious decisions in this codebase (why `phpunit.xml` uses real MySQL, why `active_slot_id` exists, why `ConcurrentBookingTest` doesn't use `RefreshDatabase`, etc.) so a future contributor — human or AI — doesn't accidentally "simplify" one of them back to something broken.
 
 ## Phase 9 note — testing consolidation
 

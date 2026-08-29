@@ -7,6 +7,7 @@ use App\Models\ImportBatch;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\Support\BuildsTestSpreadsheets;
 use Tests\TestCase;
 
@@ -15,6 +16,17 @@ class TeacherImportTest extends TestCase
     use BuildsTestSpreadsheets, RefreshDatabase;
 
     private array $headers = ['first_name', 'last_name', 'email', 'role', 'subject'];
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Uploaded import files are real filesystem writes, not DB rows —
+        // RefreshDatabase doesn't touch them. Fake the disk so every test
+        // gets an isolated, auto-cleaned location instead of littering the
+        // real storage/app/private/imports/pending directory.
+        Storage::fake('local');
+    }
 
     public function test_admin_can_preview_a_valid_teacher_import(): void
     {
