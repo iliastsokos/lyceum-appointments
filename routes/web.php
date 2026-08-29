@@ -9,6 +9,7 @@ use App\Http\Controllers\Guardian\AppointmentController as GuardianAppointmentCo
 use App\Http\Controllers\Guardian\BookingController;
 use App\Http\Controllers\Guardian\ChildController;
 use App\Http\Controllers\Guardian\DashboardController as GuardianDashboardController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Teacher\AppointmentController as TeacherAppointmentController;
 use App\Http\Controllers\Teacher\AvailabilityController;
@@ -27,6 +28,11 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/password/force-change', [ForcePasswordChangeController::class, 'show'])->name('password.force-change');
     Route::put('/password/force-change', [ForcePasswordChangeController::class, 'update'])->name('password.force-change.update');
+
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');
+    Route::patch('/notifications/{notification}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::patch('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
 });
 
 Route::middleware(['auth', 'role:guardian'])->prefix('guardian')->name('guardian.')->group(function () {

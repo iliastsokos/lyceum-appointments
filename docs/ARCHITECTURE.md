@@ -1,6 +1,15 @@
 # Architecture — Lyceum Parent–Teacher Appointment Booking System
 
-Status: Phases 1–4 complete. This document is updated as later phases land.
+Status: Phases 1–5 complete. This document is updated as later phases land.
+
+## Phase 5 note — notification center
+
+The write-path (`notifications` table, BookingService writing rows on booking/cancellation) already existed from Phase 4. This phase added the read-side UI, shared across all three roles rather than duplicated per-role, since nothing about "show my notifications" is role-specific:
+
+- A class-based Blade component (`<x-notification-bell />`) queries the 5 most recent notifications and the unread count once per page render, and is dropped into the shared navigation partial — so every dashboard gets it for free with no per-controller wiring.
+- The badge count then self-refreshes via a 30-second `setInterval` fetch to `GET /notifications/unread-count` (Alpine `x-data`/`x-init`, no page reload, no WebSockets) — satisfying spec §15's "polling/AJAX if appropriate" without a persistent connection.
+- `NotificationPolicy` enforces that a user can only mark their *own* notifications read; `markAllAsRead` is scoped to `$request->user()->notifications()`, so it can never touch another user's rows even via a crafted request.
+- The dedicated `/notifications` page is the actual "notification center" (spec §15) for the full history, paginated; the dropdown is a fast-access preview of the latest 5.
 
 ## Phase 4 note — booking engine (the critical phase)
 
