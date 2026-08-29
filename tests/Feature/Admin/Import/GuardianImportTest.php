@@ -30,6 +30,9 @@ class GuardianImportTest extends TestCase
         $token = $preview->viewData('token');
         $result = $this->actingAs($admin)->post(route('admin.imports.commit', 'guardians'), ['token' => $token]);
         $result->assertOk();
+        $result->assertSee('Import completed.');
+        $result->assertSee('3 rows processed');
+        $result->assertSee('3 children associated');
 
         $this->assertSame(2, User::where('role', UserRole::Guardian)->count());
 

@@ -45,6 +45,10 @@ class TeacherImportTest extends TestCase
         $response = $this->actingAs($admin)->post(route('admin.imports.commit', 'teachers'), ['token' => $token]);
 
         $response->assertOk();
+        $response->assertSee('Import completed.');
+        $response->assertSee('1 rows processed');
+        $response->assertSee('1 accounts created');
+        $response->assertSee('Download Temporary Passwords');
 
         $teacher = User::where('email', 'maria@example.gr')->firstOrFail();
         $this->assertSame(UserRole::Teacher, $teacher->role);

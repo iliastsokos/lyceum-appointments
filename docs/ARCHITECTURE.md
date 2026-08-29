@@ -1,6 +1,18 @@
 # Architecture — Lyceum Parent–Teacher Appointment Booking System
 
-Status: Phases 1–8 complete. This document is updated as later phases land.
+Status: Phases 1–9 complete. This document is updated as later phases land.
+
+## Phase 9 note — testing consolidation
+
+Testing was continuous through every prior phase rather than deferred, so this phase was a consolidation pass: audit coverage against spec §36's full test list, close any real gaps, then run the entire suite fresh from a completely rebuilt database.
+
+**Gaps found and closed:**
+- The import result page's human-readable summary ("X rows processed", "X accounts created", "X children associated") was verified only through the underlying `ImportBatch` model's numeric columns, never through the actual rendered text the admin sees — added `assertSee()` checks against the real response body for both import types.
+- The import history list, batch detail, and landing pages had zero test coverage (only the CSV *download* routes were tested) — added `ImportHistoryTest` covering render, content, and admin-only access.
+- Formula-injection escaping (spec §25) was implemented but never actually exercised by a test — just reasoned about. Writing the test surfaced that my first assumption about *where* the risk lives was wrong: the error report's `row_data` column is JSON-encoded, so a malicious value nested inside it can never become the CSV cell's leading character (Excel only treats a cell as a formula based on its own first character) — that column is safe by construction, not because of the escaping helper. The genuinely exploitable path is the **credentials export's `email` column**, since PHP's `FILTER_VALIDATE_EMAIL` (and therefore this app's import validation) accepts a local-part starting with `=`, `+`, or `-` as syntactically valid — e.g. `=1+1@example.gr` passes as "a valid email." Confirmed this empirically before writing the test, then verified the escaping actually neutralizes it in the real exported file.
+- Removed the placeholder `tests/Unit/ExampleTest.php` (`assertTrue(true)`), which tested nothing.
+
+**Final state**: 145 tests, 383 assertions, run fresh against a fully rebuilt MariaDB database (both dev and test schemas dropped and re-migrated from zero) — all passing. The mandatory concurrent-booking test was run several additional times standalone beyond the full-suite run for extra confidence, given its role as the single most safety-critical test in the suite. Verified zero leaked rows remain in the test database after a full run (confirming `ConcurrentBookingTest`'s manual, non-transactional cleanup continues to work correctly alongside `RefreshDatabase`-based tests). Pint clean throughout.
 
 ## Phase 8 note — security audit
 

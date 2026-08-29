@@ -2,17 +2,19 @@
 
 namespace Tests\Feature\Security;
 
+use App\Models\ImportBatch;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Tests\Support\BuildsTestSpreadsheets;
 use Tests\TestCase;
 use ZipArchive;
 
 class ImportUploadSecurityTest extends TestCase
 {
-    use RefreshDatabase;
+    use BuildsTestSpreadsheets, RefreshDatabase;
 
     public function test_a_plain_text_file_renamed_to_xlsx_is_rejected_by_validation(): void
     {
@@ -67,6 +69,53 @@ class ImportUploadSecurityTest extends TestCase
 
         $this->assertFileDoesNotExist(public_path('imports'));
         $this->assertDirectoryExists(storage_path('app/private/imports/pending'));
+    }
+
+    public function test_credentials_export_escapes_a_formula_injection_email(): void
+    {
+        // PHP's FILTER_VALIDATE_EMAIL (and therefore our import validation)
+        // accepts a local-part starting with "=", "+", or "-" as a
+        // syntactically valid email — e.g. "=cmd@example.gr" passes. If that
+        // email were exported into a CSV a spreadsheet opens, a leading "="
+        // would be interpreted as a formula unless escaped.
+        $admin = User::factory()->admin()->create();
+        $file = $this->makeXlsxUpload(
+            ['first_name', 'last_name', 'email', 'role', 'subject'],
+            [['Maria', 'Papadopoulou', '=1+1@example.gr', 'teacher', 'Mathematics']]
+        );
+
+        $preview = $this->actingAs($admin)->post(route('admin.imports.preview', 'teachers'), ['file' => $file]);
+        $token = $preview->viewData('token');
+        $this->actingAs($admin)->post(route('admin.imports.commit', 'teachers'), ['token' => $token]);
+
+        $batch = ImportBatch::firstOrFail();
+        $csv = $this->actingAs($admin)->get(route('admin.imports.history.credentials', $batch))->streamedContent();
+
+        $this->assertStringNotContainsString(',=1+1@example.gr', $csv);
+        $this->assertStringContainsString("'=1+1@example.gr", $csv);
+    }
+
+    public function test_error_report_never_lets_a_formula_leading_field_start_a_cell(): void
+    {
+        // Belt-and-suspenders: even though row_data is JSON-wrapped (so a
+        // malicious value nested inside it can never be the leading
+        // character of the CSV cell), every exported field still passes
+        // through the same escaping helper.
+        $admin = User::factory()->admin()->create();
+        $file = $this->makeXlsxUpload(
+            ['first_name', 'last_name', 'email', 'role', 'subject'],
+            [['=cmd|\'/c calc\'!A1', 'Papadopoulou', 'not-an-email', 'teacher', 'Mathematics']]
+        );
+
+        $preview = $this->actingAs($admin)->post(route('admin.imports.preview', 'teachers'), ['file' => $file]);
+        $token = $preview->viewData('token');
+        $this->actingAs($admin)->post(route('admin.imports.commit', 'teachers'), ['token' => $token]);
+
+        $batch = ImportBatch::firstOrFail();
+        $csv = $this->actingAs($admin)->get(route('admin.imports.history.errors', $batch))->streamedContent();
+
+        // The JSON-encoded row_data cell must start with "{", never "=".
+        $this->assertMatchesRegularExpression('/,"\{.*\}"\s*$/m', $csv);
     }
 
     private function realXlsxBytes(): string
