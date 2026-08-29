@@ -29,6 +29,14 @@
                     <a href="{{ route('admin.guardians.index') }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Manage Guardians') }}</a>
                 </div>
             </div>
+
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                <h3 class="text-lg font-medium text-gray-900">{{ __('Bulk Import') }}</h3>
+                <div class="mt-4 flex flex-wrap gap-3 text-sm">
+                    <a href="{{ route('admin.imports.index') }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Import Teachers / Guardians') }}</a>
+                    <a href="{{ route('admin.imports.history') }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Import History') }}</a>
+                </div>
+            </div>
         </div>
     </div>
 </x-app-layout>

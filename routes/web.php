@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\GuardianController as AdminGuardianController;
+use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\TeacherController as AdminTeacherController;
 use App\Http\Controllers\Auth\ForcePasswordChangeController;
 use App\Http\Controllers\DashboardController;
@@ -81,6 +82,19 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/guardians/{guardian}/edit', [AdminGuardianController::class, 'edit'])->name('guardians.edit');
     Route::put('/guardians/{guardian}', [AdminGuardianController::class, 'update'])->name('guardians.update');
     Route::patch('/guardians/{guardian}/toggle-status', [AdminGuardianController::class, 'toggleStatus'])->name('guardians.toggle-status');
+
+    Route::get('/imports', function () {
+        return view('admin.imports.index');
+    })->name('imports.index');
+    Route::get('/imports/history', [ImportController::class, 'history'])->name('imports.history');
+    Route::get('/imports/history/{batch}', [ImportController::class, 'historyShow'])->name('imports.history.show');
+    Route::get('/imports/history/{batch}/errors.csv', [ImportController::class, 'downloadErrorReport'])->name('imports.history.errors');
+    Route::get('/imports/history/{batch}/credentials.csv', [ImportController::class, 'downloadCredentials'])->name('imports.history.credentials');
+    Route::get('/imports/templates/teachers', [ImportController::class, 'teacherTemplate'])->name('imports.templates.teachers');
+    Route::get('/imports/templates/guardians', [ImportController::class, 'guardianTemplate'])->name('imports.templates.guardians');
+    Route::get('/imports/{type}', [ImportController::class, 'show'])->whereIn('type', ['teachers', 'guardians'])->name('imports.show');
+    Route::post('/imports/{type}/preview', [ImportController::class, 'preview'])->whereIn('type', ['teachers', 'guardians'])->name('imports.preview');
+    Route::post('/imports/{type}/commit', [ImportController::class, 'commit'])->whereIn('type', ['teachers', 'guardians'])->name('imports.commit');
 });
 
 require __DIR__.'/auth.php';

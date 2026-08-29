@@ -14,6 +14,11 @@
 
 <div class="mt-4">
     <x-input-label for="class" :value="__('Class')" />
-    <x-text-input id="class" name="class" type="text" class="mt-1 block w-full" :value="old('class', $child?->class)" required placeholder="e.g. B1" />
+    <select id="class" name="class" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
+        <option value="" disabled @selected(old('class', $child?->class) === null)>{{ __('Select a class') }}</option>
+        @foreach (\App\Enums\SchoolClass::values() as $class)
+            <option value="{{ $class }}" @selected(old('class', $child?->class) === $class)>{{ $class }}</option>
+        @endforeach
+    </select>
     <x-input-error class="mt-2" :messages="$errors->get('class')" />
 </div>

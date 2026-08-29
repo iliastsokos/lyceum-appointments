@@ -1,6 +1,26 @@
 # Architecture — Lyceum Parent–Teacher Appointment Booking System
 
-Status: Phases 1–5 complete. This document is updated as later phases land.
+Status: Phases 1–6 complete. This document is updated as later phases land.
+
+## Phase 6 note — bulk Excel import
+
+**Library swap**: dropped `maatwebsite/excel` (installed in Phase 1) in favor of using `phpoffice/phpspreadsheet` directly. Maatwebsite v4 is a very recent major rewrite whose API I could not verify with confidence; PhpSpreadsheet is the stable, well-documented library it wraps anyway, and our needs — read cells into arrays, write a simple sheet — don't benefit from the extra abstraction. This is a more predictable dependency for a Plesk deployment.
+
+**Formula safety on import**: `Worksheet::toArray(..., calculateFormulas: false, ...)` — a cell containing `=SOMETHING()` is read back as that literal string, never evaluated, so it simply fails normal field validation (e.g. not a valid email) instead of executing anything (spec §25).
+
+**Formula-injection safety on export**: every CSV cell (error reports, credential downloads, templates) is passed through a small `csvSafe()` that prefixes a value with `'` if it starts with `=`, `+`, `-`, or `@`, neutralizing the classic CSV/Excel formula-injection vector for whoever opens the downloaded file.
+
+**Staged pipeline, matching spec §22 exactly**: upload → parse+validate (no DB writes) → preview (counts + per-row errors) → admin confirms → commit. The handoff between preview and commit is a server-side session entry keyed by an opaque UUID token (never a raw file path trusted from the client), pointing at the file stored under `storage/app/private/imports/pending` (outside the public webroot). Commit **re-reads and re-validates the file from scratch** rather than trusting the preview's cached result — this closes a TOCTOU gap (e.g. someone else creates a colliding account between preview and confirm) for free.
+
+**Per-row/per-group resilience, not one giant transaction**: each teacher row (or each guardian's whole group of children) is created in its own small transaction with its own try/catch. One bad row can't roll back 99 good ones — a real all-or-nothing transaction around the whole batch would have violated spec §22's explicit requirement that partial success be possible and accurately reported.
+
+**Guardian grouping**: rows are validated independently, then grouped by normalized (trimmed, lowercased) `guardian_email` only at commit time. A repeated email is never itself an error for guardians (unlike teachers, where spec's own error-table example shows a repeated email flagged `Duplicate`) — it's the intended multi-child signal. If the email already exists in the database, the **entire group is skipped** (no guardian mutation, no new children attached) — the conservative reading of spec §19's "SKIP existing account, never silently overwrite."
+
+**Schema addition beyond the spec's literal column list**: `import_batches.skipped_rows`. Without it, "skipped because already exists" (a deliberate no-op) is indistinguishable from "failed because invalid" using only `total/successful/failed` — but spec §23's own result-summary example reports them as separate numbers.
+
+**Temporary password delivery**: reuses `AccountProvisioningService` from Phase 2. Since SMTP is not guaranteed configured (spec §32), plaintext temporary passwords are never written to the database, logs, or `import_errors.row_data` — they exist only in memory during the commit request and are flashed to the *admin's own session* for a single CSV download (`/admin/imports/history/{batch}/credentials.csv`), consumed and cleared on first read. A second request for the same batch/session correctly 404s (verified manually and by test). This is a pragmatic middle ground given no guaranteed email delivery; the deployment guide will note the admin should delete the downloaded file after distributing credentials.
+
+**Class validation reused app-wide**: added a `SchoolClass` enum (the 9 fixed Lyceum classes) and tightened `StoreChildRequest` (guardian's manual "add child" form, from Phase 2) to the same list — so a Lyceum's class vocabulary is validated consistently whether a child is added by hand or via bulk import.
 
 ## Phase 5 note — notification center
 
