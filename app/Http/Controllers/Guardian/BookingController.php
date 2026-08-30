@@ -12,7 +12,6 @@ use App\Models\User;
 use App\Services\BookingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
@@ -34,47 +33,28 @@ class BookingController extends Controller
     {
         abort_unless($teacher->isTeacher() && $teacher->isActive(), 404);
 
-        $date = $request->string('date')->toString();
-        $requestedMonth = $request->string('month')->toString();
-
-        // A completely fresh visit (no explicit date/month yet, i.e. just
-        // clicked through from the teacher list) jumps straight to the
-        // first bookable date, if the teacher has one — saves paging
-        // through empty months to find it. Any explicit navigation
-        // (a date or month in the URL) always wins over this.
-        if (! $request->filled('date') && ! $request->filled('month')) {
-            $firstAvailableDate = AppointmentSlot::where('teacher_id', $teacher->id)
-                ->where('status', SlotStatus::Available)
-                ->where('date', '>=', today()->toDateString())
-                ->orderBy('date')
-                ->value('date');
-
-            if ($firstAvailableDate) {
-                $date = $firstAvailableDate instanceof \DateTimeInterface
-                    ? $firstAvailableDate->format('Y-m-d')
-                    : (string) $firstAvailableDate;
-            }
-        }
-
-        $monthStart = $requestedMonth
-            ? Carbon::createFromFormat('Y-m', $requestedMonth)->startOfMonth()
-            : ($date ? Carbon::parse($date)->startOfMonth() : today()->startOfMonth());
-
-        // Never let month navigation go earlier than the current month —
-        // there is nothing bookable in the past.
-        if ($monthStart->lt(today()->startOfMonth())) {
-            $monthStart = today()->startOfMonth();
-        }
-
-        $monthEnd = $monthStart->copy()->endOfMonth();
-
+        // No calendar to page through any more — just the flat list of
+        // dates the teacher has actually opened. Far simpler for a
+        // guardian than hunting through a month grid for the handful of
+        // days that matter.
         $availableDates = AppointmentSlot::where('teacher_id', $teacher->id)
             ->where('status', SlotStatus::Available)
-            ->whereBetween('date', [$monthStart->toDateString(), $monthEnd->toDateString()])
+            ->where('date', '>=', today()->toDateString())
             ->distinct()
+            ->orderBy('date')
             ->pluck('date')
             ->map(fn ($d) => $d instanceof \DateTimeInterface ? $d->format('Y-m-d') : (string) $d)
             ->all();
+
+        $date = $request->string('date')->toString();
+
+        // Default to the nearest available date; also the fallback for an
+        // explicitly requested date that isn't actually open (stale link,
+        // tampered URL) — there's no "empty date" state to show any more
+        // since every listed date is guaranteed to have slots.
+        if (! in_array($date, $availableDates, true)) {
+            $date = $availableDates[0] ?? '';
+        }
 
         $slots = null;
 
@@ -90,7 +70,6 @@ class BookingController extends Controller
             'teacher' => $teacher,
             'date' => $date,
             'slots' => $slots,
-            'monthStart' => $monthStart,
             'availableDates' => $availableDates,
         ]);
     }
