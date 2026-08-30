@@ -59,6 +59,21 @@ class GuardianBookingFlowTest extends TestCase
         $response->assertSee('17:00');
     }
 
+    public function test_date_picking_calendar_supports_touch_swipe(): void
+    {
+        $guardian = User::factory()->guardian()->create();
+        $slot = $this->makeSlot();
+
+        $response = $this->actingAs($guardian)->get(route('guardian.book.date', [
+            'teacher' => $slot->teacher,
+            'date' => $slot->date->toDateString(),
+        ]));
+
+        $response->assertSee('onTouchStart', false);
+        $response->assertSee('onTouchEnd', false);
+        $response->assertSee('touch-action: pan-y', false);
+    }
+
     public function test_date_picking_page_links_back_to_the_teacher_list(): void
     {
         $guardian = User::factory()->guardian()->create();

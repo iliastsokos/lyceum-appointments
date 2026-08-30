@@ -22,7 +22,28 @@
                 <a href="{{ route('guardian.book.teachers') }}" class="inline-flex items-center gap-1 py-[10px] px-[15px] rounded-[25px] border border-solid border-[#0e6e73] text-sm font-medium text-[#0e6e73] hover:bg-[#0e6e73] hover:text-white transition">&laquo; {{ __('Επιστροφή στη λίστα εκπαιδευτικών') }}</a>
             </div>
 
-            <div class="bg-white shadow-sm sm:rounded-lg p-6 md:max-w-sm md:mx-auto">
+            <div
+                class="bg-white shadow-sm sm:rounded-lg p-6 md:max-w-sm md:mx-auto"
+                x-data="{
+                    touchStartX: null,
+                    onTouchStart(e) { this.touchStartX = e.touches[0].clientX },
+                    onTouchEnd(e) {
+                        if (this.touchStartX === null) return;
+                        const delta = e.changedTouches[0].clientX - this.touchStartX;
+                        if (Math.abs(delta) > 40) {
+                            if (delta < 0) {
+                                window.location.href = @js(route('guardian.book.date', ['teacher' => $teacher, 'month' => $nextMonth->format('Y-m')]));
+                            } @if ($canGoToPrevMonth) else {
+                                window.location.href = @js(route('guardian.book.date', ['teacher' => $teacher, 'month' => $prevMonth->format('Y-m')]));
+                            } @endif
+                        }
+                        this.touchStartX = null;
+                    },
+                }"
+                x-on:touchstart="onTouchStart($event)"
+                x-on:touchend="onTouchEnd($event)"
+                style="touch-action: pan-y;"
+            >
                 <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">{{ __('Επιλέξτε ημερομηνία') }}</h3>
 
                 <div class="mt-4 flex items-center justify-between">
