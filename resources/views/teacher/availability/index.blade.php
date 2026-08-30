@@ -28,7 +28,7 @@
                     @csrf
                     <div>
                         <x-input-label for="date" :value="__('Ημερομηνία')" />
-                        <x-text-input id="date" name="date" type="date" class="mt-1 block w-full" :value="old('date')" min="{{ today()->toDateString() }}" required />
+                        <x-date-picker name="date" :value="old('date')" :min="today()->toDateString()" required />
                         <x-input-error class="mt-2" :messages="$errors->get('date')" />
                     </div>
                     <div>

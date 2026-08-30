@@ -81,13 +81,14 @@
                         ΓΕΛ Ραφήνας
                     </span>
                     <h1 class="mt-5 text-4xl sm:text-5xl font-extrabold text-slate-800 leading-tight">
-                        Σύστημα προγραμματισμού συναντήσεων με
+                        Σύστημα προγραμματισμού
                         <span class="relative inline-block">
-                            <span class="bg-gradient-to-r from-[#0e6e73] via-[#14939a] to-[#f2952b] bg-clip-text text-transparent">εκπαιδευτικούς</span>
+                            <span class="bg-gradient-to-r from-[#0e6e73] via-[#14939a] to-[#f2952b] bg-clip-text text-transparent">συναντήσεων</span>
                             <svg class="absolute left-0 -bottom-1 w-full h-3" viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true">
                                 <path d="M2 8 Q 50 0 100 7 T 198 6" stroke="#f2952b" stroke-width="4" fill="none" stroke-linecap="round" />
                             </svg>
                         </span>
+                        με εκπαιδευτικούς
                     </h1>
                     <p class="mt-5 text-lg text-slate-600 max-w-xl">
                         Κλείστε ραντεβού με τους εκπαιδευτικούς του σχολείου σε λίγα κλικ, δείτε άμεσα ποιες ώρες είναι διαθέσιμες.

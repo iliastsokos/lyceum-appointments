@@ -11,7 +11,7 @@
                 <form method="GET" class="flex flex-wrap gap-3 items-end">
                     <div>
                         <x-input-label for="date" :value="__('Ημερομηνία')" />
-                        <x-text-input id="date" name="date" type="date" class="mt-1" value="{{ request('date') }}" />
+                        <x-date-picker name="date" :value="request('date')" class="mt-1 w-40" />
                     </div>
                     <div>
                         <x-input-label for="status" :value="__('Κατάσταση')" />
