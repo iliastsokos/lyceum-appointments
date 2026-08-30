@@ -1,0 +1,31 @@
+{
+    "name": "1ο ΓΕΛ Ραφήνας - Σύστημα Ραντεβού",
+    "short_name": "Ραντεβού ΓΕΛ",
+    "description": "Ηλεκτρονική πλατφόρμα κλεισίματος ραντεβού γονέων – εκπαιδευτικών του 1ου ΓΕΛ Ραφήνας.",
+    "start_url": "/dashboard",
+    "scope": "/",
+    "display": "standalone",
+    "background_color": "#f1f5f9",
+    "theme_color": "#0e6e73",
+    "lang": "el",
+    "icons": [
+        {
+            "src": "/icons/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any"
+        },
+        {
+            "src": "/icons/icon-512-maskable.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ]
+}
