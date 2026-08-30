@@ -24,7 +24,7 @@ class DashboardSyncTest extends TestCase
         $availability = Availability::factory()->for($teacher, 'teacher')->create(['date' => today()->addDay()->toDateString()]);
         $slot = AppointmentSlot::factory()->create([
             'teacher_id' => $teacher->id, 'availability_id' => $availability->id,
-            'date' => $availability->date, 'status' => SlotStatus::Available,
+            'date' => $availability->date->toDateString(), 'status' => SlotStatus::Available,
         ]);
 
         $this->actingAs($guardian)->post(route('guardian.book.store', [
@@ -45,7 +45,7 @@ class DashboardSyncTest extends TestCase
         $availability = Availability::factory()->for($teacher, 'teacher')->create(['date' => today()->toDateString()]);
         $slot = AppointmentSlot::factory()->create([
             'teacher_id' => $teacher->id, 'availability_id' => $availability->id,
-            'date' => $availability->date, 'start_time' => '23:55:00', 'end_time' => '23:59:59',
+            'date' => $availability->date->toDateString(), 'start_time' => '23:55:00', 'end_time' => '23:59:59',
             'status' => SlotStatus::Available,
         ]);
 

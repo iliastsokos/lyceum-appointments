@@ -26,7 +26,7 @@ class GuardianBookingFlowTest extends TestCase
         return AppointmentSlot::factory()->create([
             'teacher_id' => $teacher->id,
             'availability_id' => $availability->id,
-            'date' => $availability->date,
+            'date' => $availability->date->toDateString(),
             'start_time' => '17:00:00',
             'end_time' => '17:05:00',
             'status' => SlotStatus::Available,
@@ -180,7 +180,7 @@ class GuardianBookingFlowTest extends TestCase
         $slot = AppointmentSlot::factory()->create([
             'teacher_id' => $teacher->id,
             'availability_id' => $availability->id,
-            'date' => $availability->date,
+            'date' => $availability->date->toDateString(),
             'start_time' => '00:00:00',
             'end_time' => '00:05:00',
             'status' => SlotStatus::Available,

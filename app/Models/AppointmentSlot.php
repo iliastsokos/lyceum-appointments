@@ -22,7 +22,16 @@ class AppointmentSlot extends Model
     protected function casts(): array
     {
         return [
-            'date' => 'date',
+            // Explicit Y-m-d format, not just 'date': the plain 'date' cast
+            // serializes through the connection's full datetime format when
+            // the input is a DateTimeInterface (e.g. "2026-08-31 00:00:00")
+            // rather than a string. MySQL's DATE column type silently
+            // truncates that back to a date on write, which is why this was
+            // never visible here — but it's still imprecise, and the same
+            // model code is shared with the sqlite-migration branch, where
+            // SQLite has no such coercion and stores/compares the literal
+            // (wrong) value. Being explicit protects both.
+            'date' => 'date:Y-m-d',
             'status' => SlotStatus::class,
         ];
     }

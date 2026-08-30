@@ -24,7 +24,8 @@ class Availability extends Model
     protected function casts(): array
     {
         return [
-            'date' => 'date',
+            // See the identical comment in AppointmentSlot::casts().
+            'date' => 'date:Y-m-d',
             'status' => AvailabilityStatus::class,
         ];
     }
