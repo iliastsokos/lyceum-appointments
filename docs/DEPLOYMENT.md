@@ -1,43 +1,40 @@
-# Deployment Guide — Plesk / webhost.sch.gr
+# Deployment Guide — Plesk / webhost.sch.gr (SQLite variant)
 
-This guide covers deploying the Lyceum Appointments application to a Plesk-managed
-shared hosting account (the common setup for `webhost.sch.gr` and similar Greek
-school hosting). Two paths are documented throughout: **Plesk's web UI** (no SSH
-needed) and **SSH**, where SSH makes a step meaningfully easier. Neither path
-requires Docker, Redis, WebSockets, or a persistent Node.js process — see
+This is the `sqlite-migration` branch's deployment guide. It differs from
+`master`'s `docs/DEPLOYMENT.md` in exactly two ways: **no database server
+to create or configure** (SQLite is a single file), and the **root
+`.htaccess` redirect is the primary upload method**, not a fallback — for
+hosts where the document root genuinely cannot be changed. Everything else
+(PHP extensions, storage permissions, SSL, the admin-creation command) is
+identical to the MySQL guide.
+
+Two paths are documented throughout: **Plesk's web UI** (no SSH needed) and
+**SSH**, where SSH makes a step meaningfully easier. Neither path requires
+Docker, Redis, WebSockets, or a persistent Node.js process — see
 `docs/ARCHITECTURE.md` for why.
 
 ## 1. Requirements
 
 - **PHP 8.3 or newer** (the app requires `^8.3` in `composer.json`).
 - **PHP extensions**: `bcmath`, `ctype`, `curl`, `dom`, `fileinfo`, `filter`,
-  `hash`, `mbstring`, `openssl`, `pcre`, `pdo_mysql`, `session`, `tokenizer`,
-  `xml`, `zip`, `intl`. All but `zip`/`intl` ship enabled in typical PHP builds;
-  `zip` is required by the Excel import/export feature (PhpSpreadsheet) and
-  `intl` is recommended by Laravel. In Plesk: **Websites & Domains → PHP
-  Settings** (or **Tools & Settings → PHP Settings** for the whole server) →
-  pick the PHP 8.3 handler → tick `zip` and `intl` under Extensions if not
+  `hash`, `mbstring`, `openssl`, `pcre`, `pdo_sqlite`, `session`,
+  `tokenizer`, `xml`, `zip`, `intl`. All but `zip`/`intl`/`pdo_sqlite` ship
+  enabled in typical PHP builds; `zip` is required by the Excel
+  import/export feature (PhpSpreadsheet) and `intl` is recommended by
+  Laravel. In Plesk: **Websites & Domains → PHP Settings** (or **Tools &
+  Settings → PHP Settings** for the whole server) → pick the PHP 8.3
+  handler → tick `zip`, `intl`, and `pdo_sqlite` under Extensions if not
   already enabled.
-- **MySQL or MariaDB** (5.7+/10.3+), provided by Plesk.
+- **No database server needed.** SQLite ships as part of PHP's `pdo_sqlite`
+  extension — there's nothing to install, create, or credential.
 - **Composer** (2.x) — run locally to produce `vendor/`, or via Plesk's
-  "Composer" tool if the plan includes it (see §5).
+  "Composer" tool if the plan includes it (see §4).
 - **Node.js + npm** — **build-time only**, not needed on the server at all if
   you build assets locally/in CI and upload the compiled output (recommended
   path below).
-- SSL certificate — Plesk's free Let's Encrypt integration covers this (§9).
+- SSL certificate — Plesk's free Let's Encrypt integration covers this (§8).
 
-## 2. Create the database in Plesk
-
-1. **Websites & Domains** → your domain → **Databases** → **Add Database**.
-2. Name it (e.g. `lyceum_appointments`), select **MySQL/MariaDB**.
-3. Under **Database users**, create a dedicated user (e.g. `lyceum_app`) with a
-   strong, generated password. Grant it access only to this database — never
-   reuse the Plesk admin/root database account for the application.
-4. Note the database name, username, password, and host (Plesk databases are
-   usually reachable at `localhost` or `127.0.0.1` from the same server;
-   confirm the exact host Plesk shows you — it varies by hosting setup).
-
-## 3. Prepare the release locally (recommended path)
+## 2. Prepare the release locally (recommended path)
 
 Building the frontend assets and installing Composer dependencies **locally**
 before upload avoids needing Composer/Node available on the server at all,
@@ -55,35 +52,44 @@ CSS/JS — Vite's build output, referenced by the `@vite(...)` directive in the
 Blade layouts). `node_modules/` is **not** needed on the server and should not
 be uploaded.
 
-## 4. Upload the application
+Also create the SQLite database file itself before packaging, and run
+migrations against it locally so the server receives an already-migrated
+(but empty — no rows) schema:
+
+```bash
+touch database/database.sqlite
+php artisan migrate --force
+```
+
+## 3. Upload the application
+
+**This variant uploads directly into the domain's web root** (`httpdocs/`
+or `public_html/`), not to a sibling directory outside it, because a root
+`.htaccess` handles routing everything through `public/` — see §5.
 
 ### Option A — Plesk File Manager / Git (no SSH)
 
 - **Git (preferred if available on your plan)**: Plesk's **Websites &
-  Domains → Git** lets you point at a repository and pull on deploy. Set the
-  deployment/document root to a subdirectory (see §6) since Laravel's public
-  entry point is `public/`, not the project root.
-- **File Manager upload**: zip the project directory (including `vendor/` and
-  `public/build/` from §3, excluding `.git/`, `node_modules/`, and your local
-  `.env`) and upload/extract it via **Websites & Domains → File Manager**.
-
-Place the project **outside** the domain's public web root — e.g. at
-`/var/www/vhosts/yourdomain.gr/lyceum_appointments/` — with only `public/`
-exposed to the web (§6). This keeps `app/`, `.env`, `storage/`, and the
-SQLite/MySQL credentials unreachable from a browser even if `.htaccess`
-handling is ever misconfigured.
+  Domains → Git** lets you point at this branch and pull on deploy, with
+  the deployment path set to `httpdocs/` (or `public_html/`) directly.
+- **File Manager upload**: zip the project directory (including `vendor/`,
+  `public/build/`, and `database/database.sqlite` from §2, excluding
+  `.git/`, `node_modules/`, `tests/`, and your local `.env`) and
+  upload/extract it via **Websites & Domains → File Manager**, directly
+  into `httpdocs/`.
 
 ### Option B — SSH
 
 ```bash
-cd /var/www/vhosts/yourdomain.gr
-git clone <your-repo-url> lyceum_appointments
-cd lyceum_appointments
+cd /var/www/vhosts/yourdomain.gr/httpdocs
+git clone -b sqlite-migration <your-repo-url> .
 composer install --no-dev --optimize-autoloader
 npm ci && npm run build
+touch database/database.sqlite
+php artisan migrate --force
 ```
 
-## 5. Environment configuration
+## 4. Environment configuration
 
 Copy `.env.example` to `.env` on the server and fill in real values. Never
 commit a real `.env` to version control.
@@ -94,7 +100,7 @@ php artisan key:generate
 ```
 
 (No SSH? Create `.env` via File Manager's "New File" and paste the contents,
-then use Plesk's **Scheduled Tasks** — §8 — to run a one-off
+then use Plesk's **Scheduled Tasks** — §7 — to run a one-off
 `php artisan key:generate` command instead.)
 
 Key values to set:
@@ -104,14 +110,14 @@ APP_ENV=production
 APP_DEBUG=false
 APP_URL=https://your-school-domain.gr
 APP_TIMEZONE=Europe/Athens
+APP_LOCALE=el
+APP_FALLBACK_LOCALE=en
 
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1          # confirm the exact host Plesk assigned in §2
-DB_DATABASE=lyceum_appointments
-DB_USERNAME=lyceum_app
-DB_PASSWORD=<the password generated in §2>
+DB_CONNECTION=sqlite
+# No DB_DATABASE/HOST/USERNAME/PASSWORD needed — config/database.php
+# defaults DB_DATABASE to database/database.sqlite automatically.
 
-SESSION_SECURE_COOKIE=true  # only once HTTPS is active (§9)
+SESSION_SECURE_COOKIE=true  # only once HTTPS is active (§8)
 ```
 
 `APP_DEBUG=false` is not optional in production — with it `true`, error pages
@@ -122,22 +128,49 @@ mode, so there's no functional reason to leave debug on.
 If the school has SMTP details, fill in `MAIL_MAILER=smtp` and the
 `MAIL_HOST`/`MAIL_PORT`/`MAIL_USERNAME`/`MAIL_PASSWORD` fields — but this is
 optional. With `MAIL_MAILER=log` (the default), every core feature (booking,
-cancellation, bulk import) still works; only outbound email is skipped.
+cancellation, bulk import, admin-driven password reset) still works; only
+the self-service "forgot password" email is skipped, and the admin can
+always issue a fresh temporary password directly from the teachers/guardians
+list instead.
 
-## 6. Document root
+## 5. Routing: root `.htaccess` instead of a document-root change
 
-Point the domain's **document root** at the project's `public/` directory —
-**not** the project root. In Plesk: **Websites & Domains → Hosting Settings →
-Document root** → set it to (for example)
-`/lyceum_appointments/public` relative to the vhost root.
+Laravel's front controller lives in `public/index.php`, so it normally
+needs the domain's **document root** pointed at `public/`. Many
+webhost.sch.gr-style Plesk plans don't allow changing it. This variant
+avoids that requirement entirely: a `.htaccess` file at the project root
+(already included when you clone/extract this branch) transparently routes
+every request into `public/`:
 
-If your plan doesn't allow changing the document root (rare, but some
-budget shared-hosting panels lock it to the vhost root), the fallback is to
-upload the whole app to the vhost root and use a `.htaccess` redirect/rewrite
-so all requests are served from `public/` — but changing the document root is
-strongly preferred and avoids this workaround entirely.
+```apache
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
 
-## 7. Storage permissions
+<FilesMatch "^\.env">
+    Require all denied
+</FilesMatch>
+<FilesMatch "^(composer\.(json|lock)|artisan|\.gitignore|\.gitattributes|\.htaccess)$">
+    Require all denied
+</FilesMatch>
+```
+
+Nothing else to configure — as long as the project sits directly in
+`httpdocs`/`public_html` (§3) and `mod_rewrite` is enabled (standard on
+Plesk), visiting the domain serves `public/` invisibly. `app/`, `.env`,
+`database/database.sqlite`, and everything else outside `public/` are never
+directly reachable, since **every** request is rewritten into `public/`
+before Apache considers serving a physical file.
+
+**If your plan *does* allow changing the document root**, that's the
+cleaner alternative: place the project outside the web root entirely (e.g.
+`/var/www/vhosts/yourdomain.gr/lyceum_appointments/`), point **Websites &
+Domains → Hosting Settings → Document root** at
+`/lyceum_appointments/public`, and skip the root `.htaccess` — either
+approach is equally secure.
+
+## 6. Storage permissions
 
 The web server user needs write access to:
 
@@ -151,27 +184,33 @@ storage/framework/sessions
 storage/framework/views
 storage/logs
 bootstrap/cache
+database/                  # SQLite writes -wal/-shm sidecar files here
+database/database.sqlite   # the database file itself
 ```
 
 Via SSH:
 
 ```bash
-chmod -R 775 storage bootstrap/cache
-chown -R <plesk-web-user>:psacln storage bootstrap/cache
+chmod -R 775 storage bootstrap/cache database
+chown -R <plesk-web-user>:psacln storage bootstrap/cache database
 ```
 
-Via Plesk File Manager (no SSH): select each of the folders above →
+Via Plesk File Manager (no SSH): select each of the folders/files above →
 **Permissions** → ensure the web server user has read/write. Plesk's File
 Manager usually applies sane ownership automatically on upload, but this is
-the first thing to check if you see a "permission denied" / 500 error after
-deployment.
+the first thing to check if you see a "permission denied" / 500 error, or
+"attempt to write a readonly database", after deployment.
 
-## 8. Run migrations and create the first administrator
+## 7. Run migrations and create the first administrator
+
+If you already ran `migrate` locally before packaging (§2), the schema is
+already in place on upload — you only need to create the admin account.
+Otherwise, run both.
 
 ### With SSH
 
 ```bash
-php artisan migrate --force
+php artisan migrate --force   # skip if already run locally before upload
 php artisan app:create-admin
 ```
 
@@ -187,29 +226,21 @@ Plesk's **Websites & Domains → Scheduled Tasks** (cron) can run one-off PHP
 commands even without an interactive shell. Add a task running:
 
 ```
-php /var/www/vhosts/yourdomain.gr/lyceum_appointments/artisan migrate --force
+php /var/www/vhosts/yourdomain.gr/httpdocs/artisan app:create-admin --first-name="..." --last-name="..." --email="admin@yourschool.gr" --password="..."
 ```
 
-Run it once, then either delete the task or leave it disabled after — it's
-idempotent (`migrate` skips already-run migrations), but there's no need to
-run it repeatedly. Repeat with:
+(use the non-interactive flags here, since a scheduled task has no terminal
+to prompt into). Run it once, then delete or disable the task.
 
-```
-php /var/www/vhosts/yourdomain.gr/lyceum_appointments/artisan app:create-admin --first-name="..." --last-name="..." --email="admin@yourschool.gr" --password="..."
-```
-
-for the admin account (use the non-interactive flags here, since a scheduled
-task has no terminal to prompt into).
-
-## 9. SSL / HTTPS
+## 8. SSL / HTTPS
 
 Plesk's **SSL/TLS Certificates** tab offers free Let's Encrypt certificates —
 issue one for the domain and enable **"Redirect HTTP to HTTPS"**. Once HTTPS
 is confirmed working, set `SESSION_SECURE_COOKIE=true` in `.env` (already
-noted in §5) so session cookies are only ever sent over HTTPS — Laravel does
+noted in §4) so session cookies are only ever sent over HTTPS — Laravel does
 **not** set this automatically from `APP_URL`'s scheme.
 
-## 10. Production configuration & caching
+## 9. Production configuration & caching
 
 After the first successful deploy (and after every subsequent code deploy),
 cache the framework's config/routes/views for a real performance win on
@@ -228,7 +259,7 @@ don't have SSH, skip these three commands — the app runs correctly without
 them, just slightly slower per request; they are a pure optimization, not a
 requirement.
 
-## 11. Cron / scheduler (optional)
+## 10. Cron / scheduler (optional)
 
 Nothing in this app **requires** a cron job to function — no queued jobs,
 no scheduled reminders exist yet (see `docs/ARCHITECTURE.md`'s extensibility
@@ -246,73 +277,84 @@ small `.xlsx` files accumulate in `storage/app/private/imports/pending`,
 which never affects functionality since real imports always clean up after
 themselves).
 
-## 12. Production checklist
+## 11. Production checklist
 
 Run through this before announcing the system live:
 
 - [ ] `.env`: `APP_ENV=production`, `APP_DEBUG=false`, real `APP_KEY` generated
-- [ ] `APP_URL` matches the real domain (used for generating links, e.g. in
-      future email notifications)
-- [ ] `APP_TIMEZONE=Europe/Athens`
-- [ ] Database credentials are a dedicated, least-privilege user — not the
-      Plesk admin account
-- [ ] `php artisan migrate --force` has been run and completed without errors
+- [ ] `APP_URL` matches the real domain (used for generating links)
+- [ ] `APP_TIMEZONE=Europe/Athens`, `APP_LOCALE=el`
+- [ ] Visiting `https://yourdomain.gr/.env` returns 403/404, never the file's contents
+- [ ] `php artisan migrate --force` has been run (or was already run before packaging) and completed without errors
 - [ ] First admin account created via `app:create-admin` (verify login works)
 - [ ] SSL certificate active, HTTP→HTTPS redirect on, `SESSION_SECURE_COOKIE=true`
-- [ ] `storage/` and `bootstrap/cache/` are writable by the web server
+- [ ] `storage/`, `bootstrap/cache/`, `database/`, and `database/database.sqlite` are writable by the web server
 - [ ] `storage/app/private` is confirmed **not** web-accessible (visit
       `https://yourdomain.gr/storage/app/private/imports/pending/` in a
       browser — it must 404, not list files)
 - [ ] `public/build/` exists and pages render with styling (if it's missing,
-      the build step in §3 wasn't uploaded — a page still renders, just
+      the build step in §2 wasn't uploaded — a page still renders, just
       unstyled, so this is easy to miss)
-- [ ] Run the automated test suite one final time against a disposable
-      database before going live: `php artisan test`
-- [ ] Log in as the admin, guardian (via self-registration), and a
+- [ ] Run the automated test suite one final time before going live: `php artisan test`
+- [ ] Log in as the admin, a manually-created guardian, and a
       manually-created teacher account and walk the golden path once each:
-      admin creates a teacher → teacher sets availability → guardian
-      registers, adds a child, books an appointment → guardian cancels it
+      admin creates a teacher and a guardian → teacher sets availability →
+      guardian adds a child, books an appointment → guardian cancels it
+      (guardians and teachers are both admin-provisioned only — there is no
+      public self-registration path for either role)
 - [ ] Decide and document who has SSH/Plesk access, and confirm they know
       where `docs/ARCHITECTURE.md` and this file live
 
-## 13. Backup recommendations
+## 12. Backup recommendations
 
-- **Database**: Plesk's **Backup Manager** can schedule automatic MySQL
-  dumps — enable at least a daily backup with a retention window your host's
-  disk quota allows. This is the single most important backup: it holds
-  every guardian, child, appointment, and availability record.
+- **Database**: it's one file — `database/database.sqlite` (plus, if WAL
+  mode has an active checkpoint pending, `database/database.sqlite-wal` and
+  `-shm`; run `php artisan tinker --execute="DB::statement('PRAGMA wal_checkpoint(TRUNCATE)')"`
+  before copying to fold the WAL back into the main file first for a
+  guaranteed-consistent single-file snapshot). Plesk's **Backup Manager**
+  can include arbitrary files in its scheduled backups — enable at least a
+  daily backup with a retention window your host's disk quota allows. This
+  is the single most important backup: it holds every guardian, child,
+  appointment, and availability record.
 - **Uploaded files**: the app does not retain uploaded Excel files after a
   successful import (deleted immediately on commit — see
   `docs/ARCHITECTURE.md`'s Phase 6 notes) and never stores anything in
   `storage/app/public`, so there is no user-uploaded media library to back
-  up beyond the database itself.
+  up beyond the database file itself.
 - **`.env`**: keep a secure, offline copy of the production `.env` (e.g. in
   a password manager) — it is never committed to git and losing it means
   losing `APP_KEY` (which would invalidate all existing sessions and any
-  encrypted data) along with the database password.
+  encrypted data).
 - Test the restore path at least once before relying on it — an untested
-  backup is not a backup.
+  backup is not a backup. Restoring is just copying the saved
+  `database.sqlite` back into `database/`.
 
-## 14. Troubleshooting
+## 13. Troubleshooting
 
 **White page / 500 error, nothing else**
 Check `storage/logs/laravel.log` first. If that file itself doesn't exist or
-isn't writable, revisit §7 (storage permissions) — Laravel can't log the
+isn't writable, revisit §6 (storage permissions) — Laravel can't log the
 real error if it can't write to `storage/logs`.
 
+**"attempt to write a readonly database" / "unable to open database file"**
+`database/` (the directory, not just the file) isn't writable by the web
+server user — SQLite needs to create `-wal`/`-shm`/`-journal` sidecar files
+alongside `database.sqlite`. Re-check §6.
+
 **"The stream or file ... could not be opened" / permission errors in the log**
-Storage or `bootstrap/cache` permissions (§7). Re-check ownership matches
+Storage or `bootstrap/cache` permissions (§6). Re-check ownership matches
 the web server's user, not just your SSH/FTP user.
 
 **Styling is missing but pages load (unstyled HTML)**
 `public/build/` wasn't uploaded, or was uploaded to the wrong path. Re-run
-§3 locally and re-upload `public/build/` — check
+§2 locally and re-upload `public/build/` — check
 `public/build/manifest.json` exists on the server.
 
-**"SQLSTATE[HY000] [1045] Access denied for user"**
-Database credentials in `.env` don't match what Plesk created in §2, or
-`config:cache` (§10) is serving stale cached credentials after you edited
-`.env` — run `php artisan config:clear`.
+**Visiting the domain shows a directory listing or Plesk's default page instead of the app**
+The root `.htaccess` from §5 is missing, not being read (`AllowOverride`
+disabled — contact the host), or the project wasn't extracted directly into
+`httpdocs`/`public_html`. Confirm `httpdocs/.htaccess` and
+`httpdocs/public/index.php` both exist at those exact paths.
 
 **Migrations fail with a foreign key error**
 This should not happen on a fresh database (migrations run in dependency
@@ -332,12 +374,12 @@ Extensions** in Plesk.
 This is the intended behavior of the double-booking protection working
 correctly if two tabs/requests raced for the same slot — not a bug. If it
 happens on a *single, uncontended* booking attempt, that's a real issue:
-check `storage/logs/laravel.log` for the underlying database error (most
-likely a locking/timeout issue if the database connection is unusually
-slow) and report it rather than retrying repeatedly.
+check `storage/logs/laravel.log` for the underlying database error and
+report it rather than retrying repeatedly.
 
 **Emails are not being sent**
-Expected if `MAIL_MAILER=log` (the default, §5) — check
+Expected if `MAIL_MAILER=log` (the default, §4) — check
 `storage/logs/laravel.log` to confirm the email content, then configure real
 SMTP credentials once the school provides them. Every core feature works
-without email configured.
+without email configured, including password recovery (admin resets it
+directly from the teachers/guardians list).

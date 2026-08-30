@@ -7,7 +7,7 @@ administrators manage accounts and run bulk Excel imports.
 
 ## Stack
 
-- **Backend**: PHP 8.3+, Laravel 13, MySQL/MariaDB
+- **Backend**: PHP 8.3+, Laravel 13, SQLite
 - **Frontend**: Blade + Tailwind CSS + Alpine.js (Laravel Breeze scaffolding)
 - **Excel import/export**: PhpSpreadsheet, used directly (no Laravel-Excel wrapper)
 
@@ -25,10 +25,12 @@ cp .env.example .env
 php artisan key:generate
 ```
 
-Edit `.env` and point `DB_*` at a local MySQL/MariaDB database (create it
-first, e.g. `CREATE DATABASE lykeio_appointments;`), then:
+No database setup needed — `DB_CONNECTION=sqlite` in `.env.example` and
+`config/database.php`'s default both point at `database/database.sqlite`,
+which Laravel creates for you:
 
 ```bash
+touch database/database.sqlite
 php artisan migrate
 npm run build      # or `npm run dev` for hot-reloading during frontend work
 php artisan serve
@@ -47,11 +49,13 @@ php artisan app:create-admin
 php artisan test
 ```
 
-The test suite runs against a **real MySQL/MariaDB database**, not SQLite —
-see `phpunit.xml` and `docs/ARCHITECTURE.md`'s Phase 1 notes for why: the
-mandatory concurrent double-booking test needs genuine row-locking
-semantics. Create a second database for testing
-(e.g. `lykeio_appointments_test`) and configure it in `phpunit.xml`.
+The test suite runs against a real file-based SQLite database
+(`database/testing.sqlite`, configured in `phpunit.xml`), not `:memory:` —
+the mandatory concurrent double-booking test launches two genuine OS
+processes that race for the same slot, and an in-memory database is private
+to a single connection/process, so they'd never see each other's data. See
+`docs/ARCHITECTURE.md`'s concurrency-strategy notes for how correctness is
+still guaranteed without MySQL-style row-level locking.
 
 ## Documentation
 

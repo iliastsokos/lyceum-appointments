@@ -4,6 +4,8 @@ namespace Tests\Feature\Admin;
 
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Models\Availability;
+use App\Models\Child;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -198,7 +200,7 @@ class UserManagementTest extends TestCase
     {
         $admin = User::factory()->admin()->create();
         $teacher = User::factory()->teacher()->create();
-        \App\Models\Availability::factory()->for($teacher, 'teacher')->create();
+        Availability::factory()->for($teacher, 'teacher')->create();
 
         $response = $this->actingAs($admin)->delete(route('admin.teachers.destroy', $teacher));
 
@@ -231,7 +233,7 @@ class UserManagementTest extends TestCase
     {
         $admin = User::factory()->admin()->create();
         $guardian = User::factory()->guardian()->create();
-        \App\Models\Child::factory()->for($guardian, 'guardian')->create();
+        Child::factory()->for($guardian, 'guardian')->create();
 
         $response = $this->actingAs($admin)->delete(route('admin.guardians.destroy', $guardian));
 

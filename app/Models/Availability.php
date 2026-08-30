@@ -24,7 +24,10 @@ class Availability extends Model
     protected function casts(): array
     {
         return [
-            'date' => 'date',
+            // See the identical comment in AppointmentSlot::casts() — a plain
+            // 'date' cast round-trips through a full datetime string that
+            // SQLite (unlike MySQL) stores and compares literally.
+            'date' => 'date:Y-m-d',
             'status' => AvailabilityStatus::class,
         ];
     }

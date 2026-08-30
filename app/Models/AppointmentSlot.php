@@ -22,7 +22,14 @@ class AppointmentSlot extends Model
     protected function casts(): array
     {
         return [
-            'date' => 'date',
+            // Explicit Y-m-d format, not just 'date': the plain 'date' cast
+            // serializes through the connection's full datetime format when
+            // saving (e.g. "2026-08-31 00:00:00"). MySQL's DATE column type
+            // silently truncates that back to a date; SQLite has no such
+            // coercion and stores the literal string with the time portion,
+            // which then fails to compare/match against plain 'Y-m-d' values
+            // (including the unique index on teacher_id+date+start_time).
+            'date' => 'date:Y-m-d',
             'status' => SlotStatus::class,
         ];
     }

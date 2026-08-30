@@ -147,6 +147,65 @@ DB::transaction(function () {
 - This is why **tests run against real MariaDB, not sqlite `:memory:`** (`phpunit.xml` updated in Phase 1) — sqlite's locking/concurrency model does not reflect production behavior, and the mandatory concurrent-booking test (spec §36) needs two genuinely concurrent connections racing for the same row lock.
 - On conflict the user sees: *"Unfortunately, this appointment slot was just booked by another user. Please select another available slot."* — never a false confirmation.
 
+### 4a. `sqlite-migration` branch: the same guarantee without row-level locks
+
+This is documentation for the **`sqlite-migration` branch specifically** —
+`master` is unaffected and still runs on MySQL/MariaDB exactly as described
+above.
+
+The motivation was purely hosting practicality: the school's shared
+webhost.sch.gr-style Plesk plan doesn't allow changing the domain's document
+root, and creating/wiring up a MySQL database adds a real setup step that
+SQLite (a single file, zero server process) avoids entirely — the same
+trade-off already made successfully for a sibling project
+(`apousiologos-v3`) on the same kind of hosting.
+
+SQLite has no row-level locking — `lockForUpdate()` becomes a no-op on this
+driver (Laravel's SQLite grammar doesn't emit a locking clause), and the
+entire database serializes on writes instead of just the one contended row.
+Correctness is preserved by two things that don't depend on lock
+granularity at all:
+
+- The **`active_slot_id` unique constraint** (§4 above) is enforced
+  identically by SQLite — a second connection's write still hits a real
+  constraint violation if it somehow reaches the insert, exactly as on
+  MySQL.
+- **`busy_timeout`** (`config/database.php`, default 5000ms via
+  `DB_BUSY_TIMEOUT`) makes a second, concurrent writer *wait* for the first
+  transaction to commit rather than fail immediately with "database is
+  locked" — functionally the same wait-then-recheck behavior
+  `lockForUpdate()` gives on MySQL, just at whole-database granularity
+  instead of per-row. `BookingService::isLockTimeout()` recognizes both
+  MySQL's lock-wait/deadlock codes (1205/1213) and SQLite's busy/locked
+  codes (5/6) and maps either to the same friendly
+  `SlotUnavailableException`.
+
+The practical cost: two guardians booking with two *different* teachers at
+the same instant now briefly contend with each other too (they wouldn't
+under MySQL's per-row locking). For a single school's realistic concurrent
+load this is very unlikely to be noticeable; it would matter for an
+application with sustained high write concurrency, which this isn't.
+
+`ConcurrentBookingTest` still runs unmodified conceptually — same two-real-
+OS-processes race, same assertions (exactly one success, one friendly
+failure, exactly one `Appointment` row) — but now against
+`database/testing.sqlite`, a real *file* on disk. It cannot run against
+`:memory:`: an in-memory SQLite database is private to the connection that
+created it, so the two worker processes (each a separate PHP process, hence
+a separate connection) would never see each other's data or lock at all.
+
+One unrelated bug this branch's driver switch surfaced: a few tests set a
+`date`-cast attribute directly from another model's Carbon getter
+(`'date' => $availability->date`) instead of `->toDateString()`. Eloquent's
+`'date:Y-m-d'` cast only enforces that output format when the input is a
+string — a `DateTimeInterface` input serializes through the connection's
+full datetime format instead, storing e.g. `"2026-08-31 00:00:00"`. MySQL's
+`DATE` column silently truncates that back down, which is why this was
+never visible before; SQLite has no such coercion and stores/compares the
+literal (wrong) value. The application code (`AvailabilityService`, both
+factories) already only ever passed strings and needed no changes — only
+three test call sites did.
+
 ## 5. Excel import strategy
 
 A dedicated `ExcelImportService` (Phase 6) handles both teacher and guardian imports through the same staged pipeline (spec §22):
@@ -190,5 +249,5 @@ No database IDs are exposed where avoidable in guardian-facing URLs beyond what'
 
 ## 8. Testing strategy
 
-- PHPUnit against a real MariaDB **test** database (`lykeio_appointments_test`), not sqlite, specifically so lock-based concurrency tests are meaningful.
+- PHPUnit against a real MariaDB **test** database (`lykeio_appointments_test`), not sqlite, specifically so lock-based concurrency tests are meaningful. (On the `sqlite-migration` branch this is instead a real file-based SQLite database, `database/testing.sqlite` — see §4a for how the same guarantee holds without row-level locks.)
 - Each phase ships Feature/Unit tests for that phase's functionality per spec §36; the mandatory concurrent-booking race test (two overlapping transactions racing for one slot, asserting exactly one `Appointment` row exists) is written in Phase 4 and must pass before Phase 4 is considered done.

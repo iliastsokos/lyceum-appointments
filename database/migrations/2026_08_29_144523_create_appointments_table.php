@@ -15,19 +15,21 @@ return new class extends Migration
             $table->id();
             $table->foreignId('slot_id')->constrained('appointment_slots')->restrictOnDelete();
 
-            // Mirrors slot_id while the appointment is new/confirmed, and is
+            // Mirrors slot_id while the appointment is active (new), and is
             // set to NULL on cancellation. A plain unique constraint on
             // slot_id can't work here because a slot must be re-bookable
-            // after a cancellation; MySQL/MariaDB treat NULLs as distinct in
-            // a unique index, so this column gives us a real DB-level
-            // backstop against double booking (spec §10) while still
-            // allowing legitimate rebooking. Maintained by BookingService.
+            // after a cancellation; both MySQL/MariaDB and SQLite treat NULLs
+            // as distinct in a unique index, so this column gives us a real
+            // DB-level backstop against double booking (spec §10) while
+            // still allowing legitimate rebooking. Maintained by BookingService.
             $table->unsignedBigInteger('active_slot_id')->nullable()->unique();
 
             $table->foreignId('teacher_id')->constrained('users')->restrictOnDelete();
             $table->foreignId('guardian_id')->constrained('users')->restrictOnDelete();
             $table->foreignId('child_id')->constrained('children')->restrictOnDelete();
-            $table->enum('status', ['new', 'confirmed', 'cancelled', 'completed'])->default('new');
+            // No "confirmed" status: appointments only ever move new -> cancelled
+            // or new -> completed, so it was dropped as a dead, confusing state.
+            $table->enum('status', ['new', 'cancelled', 'completed'])->default('new');
             $table->timestamp('booked_at');
             $table->timestamp('cancelled_at')->nullable();
             $table->text('cancellation_reason')->nullable();

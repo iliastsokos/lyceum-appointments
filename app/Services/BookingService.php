@@ -140,6 +140,9 @@ class BookingService
     private function isLockTimeout(QueryException $e): bool
     {
         // MySQL/MariaDB: 1205 = lock wait timeout exceeded, 1213 = deadlock found.
-        return in_array((int) ($e->errorInfo[1] ?? 0), [1205, 1213], true);
+        // SQLite: 5 = SQLITE_BUSY (another connection holds the write lock
+        // past busy_timeout), 6 = SQLITE_LOCKED (a conflict within the same
+        // connection, e.g. two statements in one transaction).
+        return in_array((int) ($e->errorInfo[1] ?? 0), [1205, 1213, 5, 6], true);
     }
 }
