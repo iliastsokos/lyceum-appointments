@@ -27,7 +27,7 @@
             </div>
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                <div class="flex flex-wrap items-center justify-between gap-3">
+                <div class="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3">
                     <h3 class="text-lg font-medium text-gray-900">{{ __('Προσεχή Ραντεβού') }}</h3>
                     <div class="flex flex-wrap gap-3">
                         <a href="{{ route('guardian.book.teachers') }}" class="inline-flex items-center px-6 py-3 bg-[#f2952b] border border-transparent rounded-md font-semibold text-base text-white hover:bg-[#e08419] focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2">
