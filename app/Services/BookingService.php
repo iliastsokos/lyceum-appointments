@@ -65,9 +65,10 @@ class BookingService
                     'appointment_booked',
                     'Νέο ραντεβού',
                     sprintf(
-                        'Ο κηδεμόνας %s έκλεισε ραντεβού για τον/την %s στις %s.',
+                        'Ο κηδεμόνας %s έκλεισε ραντεβού για τον/την %s στις %s και ώρα %s.',
                         $guardian->full_name,
                         $child->full_name,
+                        $lockedSlot->date->translatedFormat('d/m/Y'),
                         substr($lockedSlot->start_time, 0, 5),
                     ),
                 );
@@ -123,8 +124,9 @@ class BookingService
                 'appointment_cancelled',
                 'Ακύρωση ραντεβού',
                 sprintf(
-                    'Ο κηδεμόνας %s ακύρωσε το ραντεβού στις %s.',
+                    'Ο κηδεμόνας %s ακύρωσε το ραντεβού στις %s και ώρα %s.',
                     $locked->guardian->full_name,
+                    $slot ? $slot->date->translatedFormat('d/m/Y') : '',
                     $slot ? substr($slot->start_time, 0, 5) : '',
                 ),
             );
