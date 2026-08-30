@@ -19,7 +19,7 @@
     <body class="font-sans text-gray-900 antialiased">
         <div class="min-h-screen flex flex-col sm:justify-center items-center pt-6 sm:pt-0 bg-gray-100">
             <div>
-                <a href="/" class="inline-flex items-center gap-3 bg-[#0e6e73] rounded-xl py-[30px] px-[15px] shadow-sm">
+                <a href="/" class="inline-flex items-center gap-3 bg-[#0e6e73] rounded-xl py-[15px] px-[30px] shadow-sm">
                     <span class="relative inline-flex items-center justify-center w-11 h-11 rounded-full bg-white ring-2 ring-[#f2952b]">
                         <span class="text-[#f2952b] font-extrabold text-lg leading-none">1<span class="align-super text-[9px]">ο</span></span>
                         <svg class="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 text-[#f2952b]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
