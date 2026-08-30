@@ -19,7 +19,7 @@
 </div>
 
 <div class="mt-4">
-    <x-input-label for="subject" :value="__('Μάθημα / Ειδικότητα')" />
+    <x-input-label for="subject" :value="__('Ειδικότητα')" />
     <x-text-input id="subject" name="subject" type="text" class="mt-1 block w-full" :value="old('subject', $teacher?->subject)" required placeholder="π.χ. Μαθηματικά" />
     <x-input-error class="mt-2" :messages="$errors->get('subject')" />
 </div>

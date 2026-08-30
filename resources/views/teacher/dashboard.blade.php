@@ -9,7 +9,7 @@
         <div class="max-w-5xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                 <h3 class="text-lg font-medium text-gray-900">{{ __('Καλώς ήρθατε, :name', ['name' => $teacher->full_name]) }}</h3>
-                <p class="mt-1 text-sm text-gray-600">{{ __('Μάθημα') }}: {{ $teacher->subject }}</p>
+                <p class="mt-1 text-sm text-gray-600">{{ __('Ειδικότητα') }}: {{ $teacher->subject }}</p>
                 <div class="mt-4 flex gap-4 text-sm">
                     <a href="{{ route('teacher.availability.index') }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Διαχείριση Διαθεσιμότητάς μου') }}</a>
                     <a href="{{ route('teacher.appointments.index') }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Όλα τα Ραντεβού') }}</a>
