@@ -36,6 +36,13 @@ class NotificationEmailTest extends TestCase
         $this->assertDatabaseHas('notifications', [
             'user_id' => $teacher->id,
             'type' => 'appointment_booked',
+            'message' => sprintf(
+                'Ο κηδεμόνας %s έκλεισε ραντεβού για τον/την %s στις %s και ώρα %s.',
+                $guardian->full_name,
+                $child->full_name,
+                $slot->date->translatedFormat('d/m/Y'),
+                '11:00',
+            ),
         ]);
     }
 

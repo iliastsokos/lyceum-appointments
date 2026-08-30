@@ -81,7 +81,7 @@
                         ΓΕΛ Ραφήνας
                     </span>
                     <h1 class="mt-5 text-4xl sm:text-5xl font-extrabold text-slate-800 leading-tight">
-                        Σύστημα προγραμματισμού συναντήσεων με τους/τις
+                        Σύστημα προγραμματισμού συναντήσεων με
                         <span class="relative inline-block">
                             <span class="bg-gradient-to-r from-[#0e6e73] via-[#14939a] to-[#f2952b] bg-clip-text text-transparent">εκπαιδευτικούς</span>
                             <svg class="absolute left-0 -bottom-1 w-full h-3" viewBox="0 0 200 12" preserveAspectRatio="none" aria-hidden="true">
@@ -211,7 +211,7 @@
 
         {{-- ============================= FOOTER ============================= --}}
         <footer id="contact" class="bg-[#0b4d51] text-[#cfe6e6]">
-            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 grid sm:grid-cols-2 lg:grid-cols-4 gap-10">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 grid sm:grid-cols-2 lg:grid-cols-3 gap-10">
                 <div>
                     <div class="flex items-center gap-2">
                         <span class="relative inline-flex items-center justify-center w-9 h-9 rounded-full bg-white ring-2 ring-[#f2952b]">
@@ -220,7 +220,7 @@
                         <span class="text-white font-bold">ΓΕΛ Ραφήνας</span>
                     </div>
                     <p class="mt-4 text-sm leading-relaxed">
-                        Ηλεκτρονική πλατφόρμα κλεισίματος ραντεβού του 1ου Γενικού Λυκείου Ραφήνας.
+                        Ηλεκτρονική πλατφόρμα οργάνωσης ραντεβού του 1ου Γενικού Λυκείου Ραφήνας.
                     </p>
                 </div>
 
@@ -238,15 +238,6 @@
                         <li>Αγίου Χρυσοστόμου Σμύρνης 10, Ραφήνα, Τ.Κ. 19009</li>
                         <li><a href="tel:2294028948" class="hover:text-white transition">2294028948</a></li>
                         <li><a href="mailto:mail@lyk-rafin.att.sch.gr" class="hover:text-white transition">mail@lyk-rafin.att.sch.gr</a></li>
-                    </ul>
-                </div>
-
-                <div>
-                    <h4 class="text-white font-bold text-sm uppercase tracking-wide">Ρόλοι</h4>
-                    <ul class="mt-4 space-y-2 text-sm">
-                        <li>Κηδεμόνες</li>
-                        <li>Εκπαιδευτικοί</li>
-                        <li>Διοίκηση</li>
                     </ul>
                 </div>
             </div>
