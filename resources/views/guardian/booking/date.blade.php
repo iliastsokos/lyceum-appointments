@@ -18,6 +18,10 @@
 
     <div class="py-12">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            <div>
+                <a href="{{ route('guardian.book.teachers') }}" class="text-sm text-indigo-600 hover:text-indigo-900">&laquo; {{ __('Επιστροφή στη λίστα εκπαιδευτικών') }}</a>
+            </div>
+
             <div class="bg-white shadow-sm sm:rounded-lg p-6 md:max-w-sm md:mx-auto">
                 <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">{{ __('Επιλέξτε ημερομηνία') }}</h3>
 

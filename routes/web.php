@@ -42,8 +42,6 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:guardian'])->prefix('guardian')->name('guardian.')->group(function () {
     Route::get('/dashboard', [GuardianDashboardController::class, 'index'])->name('dashboard');
 
-    Route::get('/children/create', [ChildController::class, 'create'])->name('children.create');
-    Route::post('/children', [ChildController::class, 'store'])->name('children.store');
     Route::get('/children/{child}/edit', [ChildController::class, 'edit'])->name('children.edit');
     Route::put('/children/{child}', [ChildController::class, 'update'])->name('children.update');
     Route::delete('/children/{child}', [ChildController::class, 'destroy'])->name('children.destroy');
@@ -95,6 +93,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/guardians/{guardian}/toggle-status', [AdminGuardianController::class, 'toggleStatus'])->name('guardians.toggle-status');
     Route::patch('/guardians/{guardian}/reset-password', [AdminGuardianController::class, 'resetPassword'])->name('guardians.reset-password');
     Route::delete('/guardians/{guardian}', [AdminGuardianController::class, 'destroy'])->name('guardians.destroy');
+    Route::post('/guardians/{guardian}/children', [AdminGuardianController::class, 'storeChild'])->name('guardians.children.store');
+    Route::delete('/guardians/{guardian}/children/{child}', [AdminGuardianController::class, 'destroyChild'])->name('guardians.children.destroy');
 
     Route::get('/school-classes', [SchoolClassController::class, 'index'])->name('school-classes.index');
     Route::post('/school-classes', [SchoolClassController::class, 'store'])->name('school-classes.store');

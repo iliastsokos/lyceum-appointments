@@ -7,6 +7,9 @@ use App\Enums\UserStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreGuardianRequest;
 use App\Http\Requests\Admin\UpdateGuardianRequest;
+use App\Http\Requests\StoreChildRequest;
+use App\Models\Child;
+use App\Models\SchoolClass;
 use App\Models\User;
 use App\Services\AccountProvisioningService;
 use Illuminate\Database\QueryException;
@@ -70,7 +73,38 @@ class GuardianController extends Controller
 
         $guardian->load('children');
 
-        return view('admin.guardians.edit', ['guardian' => $guardian]);
+        return view('admin.guardians.edit', ['guardian' => $guardian, 'schoolClasses' => SchoolClass::names()]);
+    }
+
+    public function storeChild(StoreChildRequest $request, User $guardian): RedirectResponse
+    {
+        abort_unless($guardian->isGuardian(), 404);
+        $this->authorize('create', Child::class);
+
+        $guardian->children()->create($request->validated());
+
+        return redirect()->route('admin.guardians.edit', $guardian)->with('status', 'child-added');
+    }
+
+    public function destroyChild(User $guardian, Child $child): RedirectResponse
+    {
+        abort_unless($guardian->isGuardian(), 404);
+        abort_unless($child->guardian_id === $guardian->id, 404);
+        $this->authorize('delete', $child);
+
+        try {
+            $child->delete();
+        } catch (QueryException $e) {
+            if ($e->getCode() !== '23000') {
+                throw $e;
+            }
+
+            return redirect()->route('admin.guardians.edit', $guardian)->withErrors([
+                'child' => 'Δεν είναι δυνατή η διαγραφή: το παιδί έχει ιστορικό ραντεβού.',
+            ]);
+        }
+
+        return redirect()->route('admin.guardians.edit', $guardian)->with('status', 'child-removed');
     }
 
     public function update(UpdateGuardianRequest $request, User $guardian): RedirectResponse

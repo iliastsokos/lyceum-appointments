@@ -11,37 +11,15 @@ class ChildManagementTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_guardian_can_add_a_child(): void
+    public function test_guardian_can_no_longer_add_a_child(): void
     {
         $guardian = User::factory()->guardian()->create();
 
-        $response = $this->actingAs($guardian)->post(route('guardian.children.store'), [
-            'first_name' => 'Maria',
-            'last_name' => 'Papadopoulou',
-            'class' => 'B1',
-        ]);
-
-        $response->assertRedirect(route('guardian.dashboard'));
-        $this->assertDatabaseHas('children', [
-            'guardian_id' => $guardian->id,
-            'first_name' => 'Maria',
-            'last_name' => 'Papadopoulou',
-            'class' => 'B1',
-        ]);
-    }
-
-    public function test_guardian_can_add_multiple_children(): void
-    {
-        $guardian = User::factory()->guardian()->create();
-
-        $this->actingAs($guardian)->post(route('guardian.children.store'), [
+        $this->actingAs($guardian)->post('/guardian/children', [
             'first_name' => 'Maria', 'last_name' => 'Papadopoulou', 'class' => 'B1',
-        ]);
-        $this->actingAs($guardian)->post(route('guardian.children.store'), [
-            'first_name' => 'Nikos', 'last_name' => 'Papadopoulos', 'class' => 'G2',
-        ]);
+        ])->assertNotFound();
 
-        $this->assertSame(2, $guardian->children()->count());
+        $this->assertSame(0, $guardian->children()->count());
     }
 
     public function test_guardian_can_edit_own_child(): void
@@ -103,12 +81,11 @@ class ChildManagementTest extends TestCase
         $this->assertDatabaseHas('children', ['id' => $childOfB->id]);
     }
 
-    public function test_guardian_can_view_create_and_edit_forms(): void
+    public function test_guardian_can_view_edit_form(): void
     {
         $guardian = User::factory()->guardian()->create();
         $child = Child::factory()->for($guardian, 'guardian')->create();
 
-        $this->actingAs($guardian)->get(route('guardian.children.create'))->assertOk();
         $this->actingAs($guardian)->get(route('guardian.children.edit', $child))->assertOk();
     }
 
