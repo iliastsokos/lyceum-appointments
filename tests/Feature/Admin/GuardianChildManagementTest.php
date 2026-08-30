@@ -53,6 +53,48 @@ class GuardianChildManagementTest extends TestCase
         ])->assertNotFound();
     }
 
+    public function test_admin_can_update_a_childs_details(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $guardian = User::factory()->guardian()->create();
+        $child = Child::factory()->for($guardian, 'guardian')->create(['first_name' => 'Original', 'class' => 'A1']);
+
+        $response = $this->actingAs($admin)->put(route('admin.guardians.children.update', [$guardian, $child]), [
+            'first_name' => 'Updated', 'last_name' => $child->last_name, 'class' => 'B1',
+        ]);
+
+        $response->assertRedirect(route('admin.guardians.edit', $guardian));
+        $this->assertSame('Updated', $child->fresh()->first_name);
+        $this->assertSame('B1', $child->fresh()->class);
+    }
+
+    public function test_non_admin_cannot_update_a_guardians_child(): void
+    {
+        $teacher = User::factory()->teacher()->create();
+        $guardian = User::factory()->guardian()->create();
+        $child = Child::factory()->for($guardian, 'guardian')->create(['first_name' => 'Original']);
+
+        $this->actingAs($teacher)->put(route('admin.guardians.children.update', [$guardian, $child]), [
+            'first_name' => 'Hacked', 'last_name' => $child->last_name, 'class' => $child->class,
+        ])->assertForbidden();
+
+        $this->assertSame('Original', $child->fresh()->first_name);
+    }
+
+    public function test_admin_cannot_update_a_child_belonging_to_a_different_guardian(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $guardianA = User::factory()->guardian()->create();
+        $guardianB = User::factory()->guardian()->create();
+        $childOfB = Child::factory()->for($guardianB, 'guardian')->create(['first_name' => 'Original']);
+
+        $this->actingAs($admin)->put(route('admin.guardians.children.update', [$guardianA, $childOfB]), [
+            'first_name' => 'Hacked', 'last_name' => $childOfB->last_name, 'class' => $childOfB->class,
+        ])->assertNotFound();
+
+        $this->assertSame('Original', $childOfB->fresh()->first_name);
+    }
+
     public function test_admin_can_delete_a_child_with_no_appointment_history(): void
     {
         $admin = User::factory()->admin()->create();

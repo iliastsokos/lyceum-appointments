@@ -39,16 +39,35 @@
                 @else
                     <ul class="mt-2 text-sm text-gray-600 divide-y divide-gray-100">
                         @foreach ($guardian->children as $child)
-                            <li class="py-2 flex items-center justify-between">
-                                <span>{{ $child->full_name }} — {{ $child->class }}</span>
-                                <x-confirm-form-button
-                                    :action="route('admin.guardians.children.destroy', [$guardian, $child])"
-                                    method="DELETE"
-                                    :title="__('Διαγραφή αυτού του παιδιού;')"
-                                    :message="__('Αν το παιδί έχει ιστορικό ραντεβού, η διαγραφή θα αποτύχει.')"
-                                    :confirm-text="__('Διαγραφή')"
-                                    button-class="text-red-600 hover:text-red-900 text-xs"
-                                >{{ __('Διαγραφή') }}</x-confirm-form-button>
+                            <li class="py-2" x-data="{ editing: false }">
+                                <div class="flex items-center justify-between" x-show="! editing">
+                                    <span>{{ $child->full_name }} — {{ $child->class }}</span>
+                                    <div class="flex gap-3 text-xs">
+                                        <button type="button" @click="editing = true" class="text-indigo-600 hover:text-indigo-900">{{ __('Επεξεργασία') }}</button>
+                                        <x-confirm-form-button
+                                            :action="route('admin.guardians.children.destroy', [$guardian, $child])"
+                                            method="DELETE"
+                                            :title="__('Διαγραφή αυτού του παιδιού;')"
+                                            :message="__('Αν το παιδί έχει ιστορικό ραντεβού, η διαγραφή θα αποτύχει.')"
+                                            :confirm-text="__('Διαγραφή')"
+                                            button-class="text-red-600 hover:text-red-900"
+                                        >{{ __('Διαγραφή') }}</x-confirm-form-button>
+                                    </div>
+                                </div>
+
+                                <form x-show="editing" x-cloak method="POST" action="{{ route('admin.guardians.children.update', [$guardian, $child]) }}" class="flex flex-wrap gap-2 items-end">
+                                    @csrf
+                                    @method('PUT')
+                                    <x-text-input type="text" name="first_name" value="{{ $child->first_name }}" class="py-1 w-24" required />
+                                    <x-text-input type="text" name="last_name" value="{{ $child->last_name }}" class="py-1 w-24" required />
+                                    <select name="class" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm text-sm py-1" required>
+                                        @foreach ($schoolClasses as $class)
+                                            <option value="{{ $class }}" @selected($child->class === $class)>{{ $class }}</option>
+                                        @endforeach
+                                    </select>
+                                    <button type="submit" class="text-indigo-600 hover:text-indigo-900 text-xs">{{ __('Αποθήκευση') }}</button>
+                                    <button type="button" @click="editing = false" class="text-gray-500 hover:text-gray-700 text-xs">{{ __('Ακύρωση') }}</button>
+                                </form>
                             </li>
                         @endforeach
                     </ul>

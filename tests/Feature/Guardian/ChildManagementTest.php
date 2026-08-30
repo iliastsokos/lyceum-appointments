@@ -22,71 +22,26 @@ class ChildManagementTest extends TestCase
         $this->assertSame(0, $guardian->children()->count());
     }
 
-    public function test_guardian_can_edit_own_child(): void
+    public function test_guardian_can_no_longer_edit_own_child(): void
     {
         $guardian = User::factory()->guardian()->create();
         $child = Child::factory()->for($guardian, 'guardian')->create();
 
-        $response = $this->actingAs($guardian)->put(route('guardian.children.update', $child), [
-            'first_name' => 'Updated',
-            'last_name' => $child->last_name,
-            'class' => $child->class,
-        ]);
+        $this->actingAs($guardian)->put('/guardian/children/'.$child->id, [
+            'first_name' => 'Updated', 'last_name' => $child->last_name, 'class' => $child->class,
+        ])->assertNotFound();
 
-        $response->assertRedirect(route('guardian.dashboard'));
-        $this->assertSame('Updated', $child->fresh()->first_name);
+        $this->assertNotSame('Updated', $child->fresh()->first_name);
     }
 
-    public function test_guardian_cannot_edit_another_guardians_child(): void
-    {
-        $guardianA = User::factory()->guardian()->create();
-        $guardianB = User::factory()->guardian()->create();
-        $childOfB = Child::factory()->for($guardianB, 'guardian')->create();
-
-        $this->actingAs($guardianA)
-            ->put(route('guardian.children.update', $childOfB), ['first_name' => 'Hacked', 'last_name' => 'Name', 'class' => 'A1'])
-            ->assertForbidden();
-
-        $this->assertNotSame('Hacked', $childOfB->fresh()->first_name);
-    }
-
-    public function test_guardian_cannot_view_another_guardians_child_edit_form(): void
-    {
-        $guardianA = User::factory()->guardian()->create();
-        $guardianB = User::factory()->guardian()->create();
-        $childOfB = Child::factory()->for($guardianB, 'guardian')->create();
-
-        $this->actingAs($guardianA)->get(route('guardian.children.edit', $childOfB))->assertForbidden();
-    }
-
-    public function test_guardian_can_delete_own_child(): void
+    public function test_guardian_can_no_longer_delete_own_child(): void
     {
         $guardian = User::factory()->guardian()->create();
         $child = Child::factory()->for($guardian, 'guardian')->create();
 
-        $this->actingAs($guardian)->delete(route('guardian.children.destroy', $child))
-            ->assertRedirect(route('guardian.dashboard'));
+        $this->actingAs($guardian)->delete('/guardian/children/'.$child->id)->assertNotFound();
 
-        $this->assertDatabaseMissing('children', ['id' => $child->id]);
-    }
-
-    public function test_guardian_cannot_delete_another_guardians_child(): void
-    {
-        $guardianA = User::factory()->guardian()->create();
-        $guardianB = User::factory()->guardian()->create();
-        $childOfB = Child::factory()->for($guardianB, 'guardian')->create();
-
-        $this->actingAs($guardianA)->delete(route('guardian.children.destroy', $childOfB))->assertForbidden();
-
-        $this->assertDatabaseHas('children', ['id' => $childOfB->id]);
-    }
-
-    public function test_guardian_can_view_edit_form(): void
-    {
-        $guardian = User::factory()->guardian()->create();
-        $child = Child::factory()->for($guardian, 'guardian')->create();
-
-        $this->actingAs($guardian)->get(route('guardian.children.edit', $child))->assertOk();
+        $this->assertDatabaseHas('children', ['id' => $child->id]);
     }
 
     public function test_guardian_dashboard_only_shows_own_children(): void
@@ -100,5 +55,16 @@ class ChildManagementTest extends TestCase
 
         $response->assertSee('MineChild');
         $response->assertDontSee('OtherChild');
+    }
+
+    public function test_guardian_dashboard_has_no_edit_or_delete_links_for_children(): void
+    {
+        $guardian = User::factory()->guardian()->create();
+        Child::factory()->for($guardian, 'guardian')->create();
+
+        $response = $this->actingAs($guardian)->get(route('guardian.dashboard'));
+
+        $response->assertDontSee('Επεξεργασία');
+        $response->assertDontSee('Διαγραφή');
     }
 }

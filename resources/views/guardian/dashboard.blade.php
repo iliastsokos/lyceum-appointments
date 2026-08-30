@@ -20,9 +20,6 @@
                             <div class="border border-gray-200 rounded-lg p-4">
                                 <div class="font-medium text-gray-900">{{ $child->full_name }}</div>
                                 <div class="text-sm text-gray-500">{{ __('Τάξη') }}: {{ $child->class }}</div>
-                                <div class="mt-3 flex gap-3 text-sm">
-                                    <a href="{{ route('guardian.children.edit', $child) }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Επεξεργασία') }}</a>
-                                </div>
                             </div>
                         @endforeach
                     </div>

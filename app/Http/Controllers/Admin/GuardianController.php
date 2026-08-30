@@ -86,6 +86,17 @@ class GuardianController extends Controller
         return redirect()->route('admin.guardians.edit', $guardian)->with('status', 'child-added');
     }
 
+    public function updateChild(StoreChildRequest $request, User $guardian, Child $child): RedirectResponse
+    {
+        abort_unless($guardian->isGuardian(), 404);
+        abort_unless($child->guardian_id === $guardian->id, 404);
+        $this->authorize('update', $child);
+
+        $child->update($request->validated());
+
+        return redirect()->route('admin.guardians.edit', $guardian)->with('status', 'child-updated');
+    }
+
     public function destroyChild(User $guardian, Child $child): RedirectResponse
     {
         abort_unless($guardian->isGuardian(), 404);

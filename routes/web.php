@@ -11,7 +11,6 @@ use App\Http\Controllers\Auth\ForcePasswordChangeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Guardian\AppointmentController as GuardianAppointmentController;
 use App\Http\Controllers\Guardian\BookingController;
-use App\Http\Controllers\Guardian\ChildController;
 use App\Http\Controllers\Guardian\DashboardController as GuardianDashboardController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ProfileController;
@@ -41,10 +40,6 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'role:guardian'])->prefix('guardian')->name('guardian.')->group(function () {
     Route::get('/dashboard', [GuardianDashboardController::class, 'index'])->name('dashboard');
-
-    Route::get('/children/{child}/edit', [ChildController::class, 'edit'])->name('children.edit');
-    Route::put('/children/{child}', [ChildController::class, 'update'])->name('children.update');
-    Route::delete('/children/{child}', [ChildController::class, 'destroy'])->name('children.destroy');
 
     Route::get('/book', [BookingController::class, 'teachers'])->name('book.teachers');
     Route::get('/book/{teacher}', [BookingController::class, 'pickDate'])->name('book.date');
@@ -94,6 +89,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/guardians/{guardian}/reset-password', [AdminGuardianController::class, 'resetPassword'])->name('guardians.reset-password');
     Route::delete('/guardians/{guardian}', [AdminGuardianController::class, 'destroy'])->name('guardians.destroy');
     Route::post('/guardians/{guardian}/children', [AdminGuardianController::class, 'storeChild'])->name('guardians.children.store');
+    Route::put('/guardians/{guardian}/children/{child}', [AdminGuardianController::class, 'updateChild'])->name('guardians.children.update');
     Route::delete('/guardians/{guardian}/children/{child}', [AdminGuardianController::class, 'destroyChild'])->name('guardians.children.destroy');
 
     Route::get('/school-classes', [SchoolClassController::class, 'index'])->name('school-classes.index');

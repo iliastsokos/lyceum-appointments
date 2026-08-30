@@ -29,17 +29,22 @@ class ChildPolicy
 
     /**
      * Determine whether the user can update the model.
+     *
+     * Admin-only — guardians can no longer edit their own children either
+     * (spec change, same reasoning as create()).
      */
     public function update(User $user, Child $child): bool
     {
-        return $user->isAdmin() || $child->guardian_id === $user->id;
+        return $user->isAdmin();
     }
 
     /**
      * Determine whether the user can delete the model.
+     *
+     * Admin-only, for the same reason as update().
      */
     public function delete(User $user, Child $child): bool
     {
-        return $user->isAdmin() || $child->guardian_id === $user->id;
+        return $user->isAdmin();
     }
 }
