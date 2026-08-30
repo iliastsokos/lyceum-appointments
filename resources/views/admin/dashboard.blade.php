@@ -38,6 +38,25 @@
                     <a href="{{ route('admin.imports.history') }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Ιστορικό Εισαγωγών') }}</a>
                 </div>
             </div>
+
+            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
+                <h3 class="text-lg font-medium text-gray-900">{{ __('Συντήρηση Συστήματος') }}</h3>
+                <p class="mt-1 text-sm text-gray-600">{{ __('Χρησιμοποιήστε αυτό μετά από κάθε ενημέρωση της εφαρμογής, ώστε τυχόν αλλαγές στη βάση δεδομένων να εφαρμοστούν — απαραίτητο ειδικά όταν δεν υπάρχει πρόσβαση μέσω SSH/Scheduled Tasks.') }}</p>
+                <div class="mt-4">
+                    <x-confirm-form-button
+                        :action="route('admin.system.migrate')"
+                        method="POST"
+                        :title="__('Εκτέλεση ενημερώσεων βάσης δεδομένων;')"
+                        :message="__('Ασφαλές να τρέξει όσες φορές θέλετε — εφαρμόζει μόνο όσες αλλαγές δεν έχουν ήδη γίνει.')"
+                        :confirm-text="__('Εκτέλεση')"
+                        button-class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700"
+                    >{{ __('Εκτέλεση Ενημερώσεων Βάσης Δεδομένων') }}</x-confirm-form-button>
+                </div>
+
+                @if (session('status') === 'migrations-run')
+                    <pre class="mt-4 bg-gray-900 text-gray-100 text-xs rounded-md p-4 overflow-x-auto">{{ session('migrateOutput') }}</pre>
+                @endif
+            </div>
         </div>
     </div>
 </x-app-layout>

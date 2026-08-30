@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\GuardianController as AdminGuardianController;
 use App\Http\Controllers\Admin\ImportController;
 use App\Http\Controllers\Admin\SchoolClassController;
+use App\Http\Controllers\Admin\SystemController;
 use App\Http\Controllers\Admin\TeacherAvailabilityController as AdminTeacherAvailabilityController;
 use App\Http\Controllers\Admin\TeacherController as AdminTeacherController;
 use App\Http\Controllers\Auth\ForcePasswordChangeController;
@@ -99,6 +100,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/school-classes', [SchoolClassController::class, 'store'])->name('school-classes.store');
     Route::put('/school-classes/{school_class}', [SchoolClassController::class, 'update'])->name('school-classes.update');
     Route::delete('/school-classes/{school_class}', [SchoolClassController::class, 'destroy'])->name('school-classes.destroy');
+
+    Route::post('/system/migrate', [SystemController::class, 'migrate'])->name('system.migrate');
 
     Route::get('/imports', function () {
         return view('admin.imports.index');
