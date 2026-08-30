@@ -27,6 +27,7 @@
                 <div class="mt-4 flex flex-wrap gap-3 text-sm">
                     <a href="{{ route('admin.teachers.index') }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Διαχείριση Εκπαιδευτικών') }}</a>
                     <a href="{{ route('admin.guardians.index') }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Διαχείριση Κηδεμόνων') }}</a>
+                    <a href="{{ route('admin.school-classes.index') }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Διαχείριση Τμημάτων') }}</a>
                 </div>
             </div>
 

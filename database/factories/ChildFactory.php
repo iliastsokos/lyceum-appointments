@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Child;
+use App\Models\SchoolClass;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -22,7 +23,10 @@ class ChildFactory extends Factory
             'guardian_id' => User::factory()->guardian(),
             'first_name' => fake()->firstName(),
             'last_name' => fake()->lastName(),
-            'class' => fake()->randomElement(['A1', 'A2', 'A3', 'B1', 'B2', 'B3', 'G1', 'G2', 'G3']),
+            // The migration seeds a default set of classes, so this is
+            // normally never empty — the literal fallback only matters for
+            // a database that's had every class deleted.
+            'class' => fake()->randomElement(SchoolClass::names() ?: ['A1']),
         ];
     }
 }

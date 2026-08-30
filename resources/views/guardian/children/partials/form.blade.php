@@ -16,7 +16,7 @@
     <x-input-label for="class" :value="__('Τάξη')" />
     <select id="class" name="class" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
         <option value="" disabled @selected(old('class', $child?->class) === null)>{{ __('Επιλέξτε τάξη') }}</option>
-        @foreach (\App\Enums\SchoolClass::values() as $class)
+        @foreach ($schoolClasses as $class)
             <option value="{{ $class }}" @selected(old('class', $child?->class) === $class)>{{ $class }}</option>
         @endforeach
     </select>

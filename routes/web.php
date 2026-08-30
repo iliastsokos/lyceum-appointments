@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\GuardianController as AdminGuardianController;
 use App\Http\Controllers\Admin\ImportController;
+use App\Http\Controllers\Admin\SchoolClassController;
 use App\Http\Controllers\Admin\TeacherAvailabilityController as AdminTeacherAvailabilityController;
 use App\Http\Controllers\Admin\TeacherController as AdminTeacherController;
 use App\Http\Controllers\Auth\ForcePasswordChangeController;
@@ -93,6 +94,11 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::patch('/guardians/{guardian}/toggle-status', [AdminGuardianController::class, 'toggleStatus'])->name('guardians.toggle-status');
     Route::patch('/guardians/{guardian}/reset-password', [AdminGuardianController::class, 'resetPassword'])->name('guardians.reset-password');
     Route::delete('/guardians/{guardian}', [AdminGuardianController::class, 'destroy'])->name('guardians.destroy');
+
+    Route::get('/school-classes', [SchoolClassController::class, 'index'])->name('school-classes.index');
+    Route::post('/school-classes', [SchoolClassController::class, 'store'])->name('school-classes.store');
+    Route::put('/school-classes/{school_class}', [SchoolClassController::class, 'update'])->name('school-classes.update');
+    Route::delete('/school-classes/{school_class}', [SchoolClassController::class, 'destroy'])->name('school-classes.destroy');
 
     Route::get('/imports', function () {
         return view('admin.imports.index');
