@@ -16,9 +16,7 @@ class ProfileUpdateRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
-            'first_name' => ['required', 'string', 'max:255'],
-            'last_name' => ['required', 'string', 'max:255'],
+        $rules = [
             'phone' => ['nullable', 'string', 'max:50'],
             'email' => [
                 'required',
@@ -29,5 +27,14 @@ class ProfileUpdateRequest extends FormRequest
                 Rule::unique(User::class)->ignore($this->user()->id),
             ],
         ];
+
+        // Teachers and guardians have their name set by the school office
+        // on account creation; only admins may change a name here.
+        if ($this->user()->isAdmin()) {
+            $rules['first_name'] = ['required', 'string', 'max:255'];
+            $rules['last_name'] = ['required', 'string', 'max:255'];
+        }
+
+        return $rules;
     }
 }
