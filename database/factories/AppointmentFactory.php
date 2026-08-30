@@ -43,6 +43,9 @@ class AppointmentFactory extends Factory
             'guardian_id' => $guardian->id,
             'child_id' => $child->id,
             'status' => AppointmentStatus::New,
+            'date' => $slot->date,
+            'start_time' => $slot->start_time,
+            'end_time' => $slot->end_time,
             'booked_at' => now(),
         ];
     }

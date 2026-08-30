@@ -55,6 +55,9 @@ class BookingService
                     'guardian_id' => $guardian->id,
                     'child_id' => $child->id,
                     'status' => AppointmentStatus::New,
+                    'date' => $lockedSlot->date,
+                    'start_time' => $lockedSlot->start_time,
+                    'end_time' => $lockedSlot->end_time,
                     'booked_at' => now(),
                 ]);
 

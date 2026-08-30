@@ -34,6 +34,9 @@ class AppointmentListOrderingTest extends TestCase
             'teacher_id' => $laterSlot->teacher_id,
             'guardian_id' => $guardian->id,
             'child_id' => $child->id,
+            'date' => $laterSlot->date,
+            'start_time' => $laterSlot->start_time,
+            'end_time' => $laterSlot->end_time,
             'booked_at' => now()->subMinutes(10),
         ]);
         $earlierAppointment = Appointment::factory()->create([
@@ -42,6 +45,9 @@ class AppointmentListOrderingTest extends TestCase
             'teacher_id' => $earlierSlot->teacher_id,
             'guardian_id' => $guardian->id,
             'child_id' => $child->id,
+            'date' => $earlierSlot->date,
+            'start_time' => $earlierSlot->start_time,
+            'end_time' => $earlierSlot->end_time,
             'booked_at' => now(),
         ]);
 
@@ -71,6 +77,9 @@ class AppointmentListOrderingTest extends TestCase
             'teacher_id' => $teacher->id,
             'guardian_id' => $laterGuardian->id,
             'child_id' => $laterChild->id,
+            'date' => $laterSlot->date,
+            'start_time' => $laterSlot->start_time,
+            'end_time' => $laterSlot->end_time,
             'booked_at' => now()->subMinutes(10),
         ]);
         Appointment::factory()->create([
@@ -79,6 +88,9 @@ class AppointmentListOrderingTest extends TestCase
             'teacher_id' => $teacher->id,
             'guardian_id' => $earlierGuardian->id,
             'child_id' => $earlierChild->id,
+            'date' => $earlierSlot->date,
+            'start_time' => $earlierSlot->start_time,
+            'end_time' => $earlierSlot->end_time,
             'booked_at' => now(),
         ]);
 

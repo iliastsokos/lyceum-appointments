@@ -17,14 +17,12 @@ class AppointmentController extends Controller
     public function index(Request $request): View
     {
         $appointments = $request->user()->appointmentsAsGuardian()
-            ->join('appointment_slots', 'appointments.slot_id', '=', 'appointment_slots.id')
             ->with(['teacher', 'child'])
-            ->when($request->filled('teacher_id'), fn ($q) => $q->where('appointments.teacher_id', $request->integer('teacher_id')))
-            ->when($request->filled('child_id'), fn ($q) => $q->where('appointments.child_id', $request->integer('child_id')))
-            ->when($request->filled('status'), fn ($q) => $q->where('appointments.status', $request->string('status')))
-            ->orderBy('appointment_slots.date')
-            ->orderBy('appointment_slots.start_time')
-            ->select('appointments.*')
+            ->when($request->filled('teacher_id'), fn ($q) => $q->where('teacher_id', $request->integer('teacher_id')))
+            ->when($request->filled('child_id'), fn ($q) => $q->where('child_id', $request->integer('child_id')))
+            ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
+            ->orderBy('date')
+            ->orderBy('start_time')
             ->get();
 
         return view('guardian.appointments.index', [

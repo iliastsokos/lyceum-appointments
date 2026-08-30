@@ -50,7 +50,7 @@
                             <div class="py-3 flex items-center justify-between text-sm">
                                 <div>
                                     <div class="font-medium text-gray-900">{{ $appointment->teacher->full_name }} &middot; {{ $appointment->child->full_name }}</div>
-                                    <div class="text-gray-500">{{ \Illuminate\Support\Carbon::parse($appointment->slot->date)->translatedFormat('d/m/Y') }} στις {{ substr($appointment->slot->start_time, 0, 5) }}</div>
+                                    <div class="text-gray-500">{{ \Illuminate\Support\Carbon::parse($appointment->date)->translatedFormat('d/m/Y') }} στις {{ substr($appointment->start_time, 0, 5) }}</div>
                                 </div>
                             </div>
                         @endforeach
