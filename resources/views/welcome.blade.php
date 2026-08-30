@@ -231,6 +231,8 @@
                     <ul class="mt-4 space-y-2 text-sm">
                         <li><a href="{{ route('login') }}" class="hover:text-white transition">Σύνδεση</a></li>
                         <li><a href="https://lyk-rafin-new.att.sch.gr/" target="_blank" rel="noopener noreferrer" class="hover:text-white transition">Επίσημη Ιστοσελίδα Σχολείου</a></li>
+                        <li><a href="/user-guides/odigos-kidemona.pdf" target="_blank" rel="noopener" class="hover:text-white transition">📄 Οδηγός Κηδεμόνα (PDF)</a></li>
+                        <li><a href="/user-guides/odigos-ekpaideftikou.pdf" target="_blank" rel="noopener" class="hover:text-white transition">📄 Οδηγός Εκπαιδευτικού (PDF)</a></li>
                     </ul>
                 </div>
 
