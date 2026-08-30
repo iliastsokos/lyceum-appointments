@@ -3,8 +3,10 @@
 namespace Tests\Feature\Teacher;
 
 use App\Enums\SlotStatus;
+use App\Models\Appointment;
 use App\Models\AppointmentSlot;
 use App\Models\Availability;
+use App\Models\Child;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -220,6 +222,85 @@ class AvailabilityManagementTest extends TestCase
             ->assertSessionHasErrors('availability');
 
         $this->assertDatabaseHas('availability', ['id' => $availability->id]);
+    }
+
+    public function test_teacher_can_remove_availability_whose_only_appointment_was_cancelled(): void
+    {
+        $teacher = User::factory()->teacher()->create();
+        $guardian = User::factory()->guardian()->create();
+        $child = Child::factory()->for($guardian, 'guardian')->create();
+
+        $availability = Availability::factory()->for($teacher, 'teacher')->create();
+        $slot = AppointmentSlot::factory()->create([
+            'teacher_id' => $teacher->id,
+            'availability_id' => $availability->id,
+            'date' => $availability->date,
+            'start_time' => $availability->start_time,
+            // Reverted to available after the guardian cancelled — nothing
+            // is actually booked here any more.
+            'status' => SlotStatus::Available,
+        ]);
+        $appointment = Appointment::factory()->cancelled()->create([
+            'slot_id' => $slot->id,
+            'teacher_id' => $teacher->id,
+            'guardian_id' => $guardian->id,
+            'child_id' => $child->id,
+            'date' => $slot->date,
+            'start_time' => $slot->start_time,
+            'end_time' => $slot->end_time,
+        ]);
+
+        $this->actingAs($teacher)->delete(route('teacher.availability.destroy', $availability))
+            ->assertRedirect(route('teacher.availability.index'));
+
+        $this->assertDatabaseMissing('availability', ['id' => $availability->id]);
+        $this->assertDatabaseMissing('appointment_slots', ['id' => $slot->id]);
+
+        // The cancelled appointment's own historical record survives, with
+        // its date/time intact, even though the slot it once pointed to is
+        // now gone.
+        $appointment->refresh();
+        $this->assertNull($appointment->slot_id);
+        $this->assertSame($slot->date->toDateString(), $appointment->date->toDateString());
+        $this->assertSame($slot->start_time, $appointment->start_time);
+    }
+
+    public function test_teacher_can_remove_several_such_availabilities_in_a_row(): void
+    {
+        $teacher = User::factory()->teacher()->create();
+        $guardian = User::factory()->guardian()->create();
+        $child = Child::factory()->for($guardian, 'guardian')->create();
+
+        $availabilities = collect(range(1, 3))->map(function (int $daysOut) use ($teacher, $guardian, $child) {
+            $availability = Availability::factory()->for($teacher, 'teacher')->create([
+                'date' => today()->addDays($daysOut)->toDateString(),
+            ]);
+            $slot = AppointmentSlot::factory()->create([
+                'teacher_id' => $teacher->id,
+                'availability_id' => $availability->id,
+                'date' => $availability->date,
+                'start_time' => $availability->start_time,
+                'status' => SlotStatus::Available,
+            ]);
+            Appointment::factory()->cancelled()->create([
+                'slot_id' => $slot->id,
+                'teacher_id' => $teacher->id,
+                'guardian_id' => $guardian->id,
+                'child_id' => $child->id,
+                'date' => $slot->date,
+                'start_time' => $slot->start_time,
+                'end_time' => $slot->end_time,
+            ]);
+
+            return $availability;
+        });
+
+        foreach ($availabilities as $availability) {
+            $this->actingAs($teacher)->delete(route('teacher.availability.destroy', $availability))
+                ->assertRedirect(route('teacher.availability.index'));
+
+            $this->assertDatabaseMissing('availability', ['id' => $availability->id]);
+        }
     }
 
     public function test_teacher_cannot_remove_another_teachers_availability(): void

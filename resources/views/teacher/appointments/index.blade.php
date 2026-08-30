@@ -44,8 +44,8 @@
                         <tbody class="divide-y divide-gray-100">
                             @foreach ($appointments as $appointment)
                                 <tr>
-                                    <td class="py-3 pr-4">{{ \Illuminate\Support\Carbon::parse($appointment->slot->date)->translatedFormat('d/m/Y') }}</td>
-                                    <td class="py-3 pr-4">{{ substr($appointment->slot->start_time, 0, 5) }}</td>
+                                    <td class="py-3 pr-4">{{ \Illuminate\Support\Carbon::parse($appointment->date)->translatedFormat('d/m/Y') }}</td>
+                                    <td class="py-3 pr-4">{{ substr($appointment->start_time, 0, 5) }}</td>
                                     <td class="py-3 pr-4">{{ $appointment->guardian->full_name }}</td>
                                     <td class="py-3 pr-4">{{ $appointment->child->full_name }}</td>
                                     <td class="py-3 pr-4">{{ $appointment->child->class }}</td>

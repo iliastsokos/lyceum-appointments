@@ -77,8 +77,8 @@
                                 </div>
                                 <div class="mt-1 text-sm text-gray-600">{{ __('Μαθητής/-τρια') }}: {{ $appointment->child->full_name }}</div>
                                 <div class="mt-1 text-sm text-gray-600">
-                                    {{ \Illuminate\Support\Carbon::parse($appointment->slot->date)->translatedFormat('d/m/Y') }}
-                                    &middot; {{ substr($appointment->slot->start_time, 0, 5) }}–{{ substr($appointment->slot->end_time, 0, 5) }}
+                                    {{ \Illuminate\Support\Carbon::parse($appointment->date)->translatedFormat('d/m/Y') }}
+                                    &middot; {{ substr($appointment->start_time, 0, 5) }}–{{ substr($appointment->end_time, 0, 5) }}
                                 </div>
                                 <div class="mt-1 text-xs text-gray-400">{{ __('Κλείστηκε') }}: {{ $appointment->booked_at->format('d/m/Y H:i') }}</div>
 

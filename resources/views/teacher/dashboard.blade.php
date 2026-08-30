@@ -29,7 +29,7 @@
                 @if ($nextAppointment)
                     <p class="mt-2 text-sm text-gray-600">
                         {{ __('Επόμενο ραντεβού: :time με :guardian για :child', [
-                            'time' => substr($nextAppointment->slot->start_time, 0, 5),
+                            'time' => substr($nextAppointment->start_time, 0, 5),
                             'guardian' => $nextAppointment->guardian->full_name,
                             'child' => $nextAppointment->child->full_name,
                         ]) }}
@@ -43,7 +43,7 @@
                         @foreach ($todaysAppointments as $appointment)
                             <div class="py-3 flex items-center justify-between text-sm">
                                 <div>
-                                    <div class="font-medium text-gray-900">{{ substr($appointment->slot->start_time, 0, 5) }} &middot; {{ $appointment->guardian->full_name }} &middot; {{ $appointment->child->full_name }}</div>
+                                    <div class="font-medium text-gray-900">{{ substr($appointment->start_time, 0, 5) }} &middot; {{ $appointment->guardian->full_name }} &middot; {{ $appointment->child->full_name }}</div>
                                     <div class="text-gray-500">{{ __('Τάξη') }}: {{ $appointment->child->class }}</div>
                                 </div>
                                 <span class="px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">{{ $appointment->status->label() }}</span>
@@ -59,8 +59,8 @@
                     <div class="mt-4 divide-y divide-gray-100">
                         @foreach ($recentCancellations as $appointment)
                             <div class="py-3 text-sm text-gray-600">
-                                {{ \Illuminate\Support\Carbon::parse($appointment->slot->date)->translatedFormat('d/m/Y') }}
-                                &middot; {{ substr($appointment->slot->start_time, 0, 5) }}
+                                {{ \Illuminate\Support\Carbon::parse($appointment->date)->translatedFormat('d/m/Y') }}
+                                &middot; {{ substr($appointment->start_time, 0, 5) }}
                                 &middot; {{ $appointment->guardian->full_name }} &middot; {{ $appointment->child->full_name }}
                             </div>
                         @endforeach

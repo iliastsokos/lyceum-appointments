@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['slot_id', 'active_slot_id', 'teacher_id', 'guardian_id', 'child_id', 'status', 'booked_at', 'cancelled_at', 'cancellation_reason'])]
+#[Fillable(['slot_id', 'active_slot_id', 'teacher_id', 'guardian_id', 'child_id', 'status', 'date', 'start_time', 'end_time', 'booked_at', 'cancelled_at', 'cancellation_reason'])]
 class Appointment extends Model
 {
     /** @use HasFactory<AppointmentFactory> */
@@ -19,6 +19,11 @@ class Appointment extends Model
     {
         return [
             'status' => AppointmentStatus::class,
+            // Same explicit Y-m-d format as AppointmentSlot::casts(), and for
+            // the same reason: this model is shared with the sqlite-migration
+            // branch, where the plain 'date' cast would serialize a full
+            // datetime string instead of just a date on write.
+            'date' => 'date:Y-m-d',
             'booked_at' => 'datetime',
             'cancelled_at' => 'datetime',
         ];

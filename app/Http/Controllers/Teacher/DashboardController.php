@@ -14,15 +14,14 @@ class DashboardController extends Controller
         $teacher = $request->user();
 
         $todaysAppointments = $teacher->appointmentsAsTeacher()
-            ->with(['guardian', 'child', 'slot'])
+            ->with(['guardian', 'child'])
             ->where('status', AppointmentStatus::New)
-            ->whereHas('slot', fn ($q) => $q->where('date', today()->toDateString()))
-            ->get()
-            ->sortBy(fn ($appointment) => $appointment->slot->start_time)
-            ->values();
+            ->where('date', today()->toDateString())
+            ->orderBy('start_time')
+            ->get();
 
         $recentCancellations = $teacher->appointmentsAsTeacher()
-            ->with(['guardian', 'child', 'slot'])
+            ->with(['guardian', 'child'])
             ->where('status', AppointmentStatus::Cancelled)
             ->orderByDesc('cancelled_at')
             ->limit(5)
@@ -31,7 +30,7 @@ class DashboardController extends Controller
         return view('teacher.dashboard', [
             'teacher' => $teacher,
             'todaysAppointments' => $todaysAppointments,
-            'nextAppointment' => $todaysAppointments->first(fn ($a) => $a->slot->start_time >= now()->format('H:i:s')),
+            'nextAppointment' => $todaysAppointments->first(fn ($a) => $a->start_time >= now()->format('H:i:s')),
             'recentCancellations' => $recentCancellations,
         ]);
     }
