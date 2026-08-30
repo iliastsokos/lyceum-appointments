@@ -3,12 +3,12 @@
 namespace App\Services;
 
 use App\Enums\ImportType;
-use App\Enums\SchoolClass;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Exceptions\UnreadableSpreadsheetException;
 use App\Models\ImportBatch;
 use App\Models\ImportError;
+use App\Models\SchoolClass;
 use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
@@ -187,7 +187,7 @@ class ExcelImportService
      */
     public function validateGuardianRows(Collection $rows): array
     {
-        $validClasses = SchoolClass::values();
+        $validClasses = SchoolClass::names();
 
         $validated = $rows->map(function (array $item) use ($validClasses) {
             $raw = $item['raw'];

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Guardian;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreChildRequest;
 use App\Models\Child;
+use App\Models\SchoolClass;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -15,7 +16,7 @@ class ChildController extends Controller
     {
         $this->authorize('create', Child::class);
 
-        return view('guardian.children.create');
+        return view('guardian.children.create', ['schoolClasses' => SchoolClass::names()]);
     }
 
     public function store(StoreChildRequest $request): RedirectResponse
@@ -31,7 +32,7 @@ class ChildController extends Controller
     {
         $this->authorize('update', $child);
 
-        return view('guardian.children.edit', ['child' => $child]);
+        return view('guardian.children.edit', ['child' => $child, 'schoolClasses' => SchoolClass::names()]);
     }
 
     public function update(StoreChildRequest $request, Child $child): RedirectResponse

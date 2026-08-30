@@ -2,7 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Enums\SchoolClass;
+use App\Models\SchoolClass;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -21,7 +21,7 @@ class StoreChildRequest extends FormRequest
         return [
             'first_name' => ['required', 'string', 'max:255'],
             'last_name' => ['required', 'string', 'max:255'],
-            'class' => ['required', Rule::in(SchoolClass::values())],
+            'class' => ['required', Rule::in(SchoolClass::names())],
         ];
     }
 }

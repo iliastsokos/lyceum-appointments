@@ -88,6 +88,7 @@
                                 <path d="M2 8 Q 50 0 100 7 T 198 6" stroke="#f2952b" stroke-width="4" fill="none" stroke-linecap="round" />
                             </svg>
                         </span>
+                        <br>
                         με εκπαιδευτικούς
                     </h1>
                     <p class="mt-5 text-lg text-slate-600 max-w-xl">
