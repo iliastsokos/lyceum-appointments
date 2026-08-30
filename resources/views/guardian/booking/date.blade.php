@@ -6,14 +6,8 @@
     </x-slot>
 
     @php
-        $today = today();
-        $prevMonth = $monthStart->copy()->subMonthNoOverflow();
-        $nextMonth = $monthStart->copy()->addMonthNoOverflow();
-        $canGoToPrevMonth = $prevMonth->endOfMonth()->greaterThanOrEqualTo($today->copy()->startOfMonth());
-
-        // Build a Monday-first grid, padding with leading/trailing blanks.
-        $leadingBlanks = ($monthStart->dayOfWeekIso - 1);
-        $daysInMonth = $monthStart->daysInMonth;
+        $dayAbbr = ['Δευ', 'Τρι', 'Τετ', 'Πεμ', 'Παρ', 'Σαβ', 'Κυρ'];
+        $monthAbbr = ['Ιαν', 'Φεβ', 'Μαρ', 'Απρ', 'Μάι', 'Ιουν', 'Ιουλ', 'Αυγ', 'Σεπ', 'Οκτ', 'Νοε', 'Δεκ'];
     @endphp
 
     <div class="py-12">
@@ -22,114 +16,60 @@
                 <a href="{{ route('guardian.book.teachers') }}" class="inline-flex items-center gap-1 py-[10px] px-[15px] rounded-[25px] border border-solid border-[#0e6e73] text-sm font-medium text-[#0e6e73] hover:bg-[#0e6e73] hover:text-white transition">&laquo; {{ __('Επιστροφή στη λίστα εκπαιδευτικών') }}</a>
             </div>
 
-            <div
-                class="bg-white shadow-sm sm:rounded-lg p-6 md:max-w-sm md:mx-auto"
-                x-data="{
-                    touchStartX: null,
-                    onTouchStart(e) { this.touchStartX = e.touches[0].clientX },
-                    onTouchEnd(e) {
-                        if (this.touchStartX === null) return;
-                        const delta = e.changedTouches[0].clientX - this.touchStartX;
-                        if (Math.abs(delta) > 40) {
-                            if (delta < 0) {
-                                window.location.href = @js(route('guardian.book.date', ['teacher' => $teacher, 'month' => $nextMonth->format('Y-m')]));
-                            } @if ($canGoToPrevMonth) else {
-                                window.location.href = @js(route('guardian.book.date', ['teacher' => $teacher, 'month' => $prevMonth->format('Y-m')]));
-                            } @endif
-                        }
-                        this.touchStartX = null;
-                    },
-                }"
-                x-on:touchstart="onTouchStart($event)"
-                x-on:touchend="onTouchEnd($event)"
-                style="touch-action: pan-y;"
-            >
-                <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">{{ __('Επιλέξτε ημερομηνία') }}</h3>
+            <div class="bg-white shadow-sm rounded-2xl p-5 sm:p-6">
+                <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">{{ __('Διαθέσιμες Ημερομηνίες') }}</h3>
 
-                <div class="mt-4 flex items-center justify-between">
-                    @if ($canGoToPrevMonth)
-                        <a href="{{ route('guardian.book.date', ['teacher' => $teacher, 'month' => $prevMonth->format('Y-m')]) }}"
-                           class="p-2 rounded-md text-gray-500 hover:bg-gray-100" aria-label="{{ __('Προηγούμενος μήνας') }}">
-                            &laquo;
-                        </a>
-                    @else
-                        <span class="p-2 text-gray-300">&laquo;</span>
-                    @endif
-
-                    <div class="font-semibold text-gray-900 capitalize">
-                        {{ $monthStart->translatedFormat('F Y') }}
+                @if (empty($availableDates))
+                    <div class="mt-4 flex items-center gap-3 text-sm text-gray-600 bg-gray-50 rounded-xl p-4">
+                        <span class="text-2xl">🗓️</span>
+                        <span>{{ __('Ο/Η εκπαιδευτικός δεν έχει ανοίξει διαθέσιμες ημερομηνίες αυτή τη στιγμή. Δοκιμάστε ξανά αργότερα.') }}</span>
                     </div>
-
-                    <a href="{{ route('guardian.book.date', ['teacher' => $teacher, 'month' => $nextMonth->format('Y-m')]) }}"
-                       class="p-2 rounded-md text-gray-500 hover:bg-gray-100" aria-label="{{ __('Επόμενος μήνας') }}">
-                        &raquo;
-                    </a>
-                </div>
-
-                <div class="mt-4 grid grid-cols-7 gap-1 text-center text-xs font-medium text-gray-400">
-                    <div>Δε</div>
-                    <div>Τρ</div>
-                    <div>Τε</div>
-                    <div>Πε</div>
-                    <div>Πα</div>
-                    <div>Σα</div>
-                    <div>Κυ</div>
-                </div>
-
-                <div class="mt-1 grid grid-cols-7 gap-1">
-                    @for ($i = 0; $i < $leadingBlanks; $i++)
-                        <div></div>
-                    @endfor
-
-                    @for ($day = 1; $day <= $daysInMonth; $day++)
-                        @php
-                            $cellDate = $monthStart->copy()->day($day);
-                            $cellDateString = $cellDate->toDateString();
-                            $isPast = $cellDate->lt($today);
-                            $hasAvailability = in_array($cellDateString, $availableDates, true);
-                            $isSelected = $date === $cellDateString;
-                        @endphp
-
-                        @if ($isPast)
-                            <div class="aspect-square flex items-center justify-center rounded-md text-sm text-gray-300">
-                                {{ $day }}
-                            </div>
-                        @else
-                            <a href="{{ route('guardian.book.date', ['teacher' => $teacher, 'month' => $monthStart->format('Y-m'), 'date' => $cellDateString]) }}"
-                               class="aspect-square flex items-center justify-center rounded-md text-sm font-medium transition
-                                      {{ $hasAvailability ? 'bg-[#f2952b] text-white hover:bg-[#e08419]' : 'text-gray-700 hover:bg-gray-100' }}
-                                      {{ $isSelected ? 'ring-2 ring-offset-1 ring-[#0e6e73]' : '' }}">
-                                {{ $day }}
-                            </a>
-                        @endif
-                    @endfor
-                </div>
-
-                <p class="mt-4 text-xs text-gray-500 flex items-center gap-2">
-                    <span class="inline-block w-3 h-3 rounded-sm bg-[#f2952b]"></span>
-                    {{ __('Ημέρες με διαθέσιμα ραντεβού') }}
-                </p>
+                @else
+                    <div class="mt-4 -mx-5 sm:-mx-6 px-5 sm:px-6 overflow-x-auto">
+                        <div class="flex gap-2.5 pb-1">
+                            @foreach ($availableDates as $availableDate)
+                                @php
+                                    $d = \Illuminate\Support\Carbon::parse($availableDate);
+                                    $isSelected = $date === $availableDate;
+                                @endphp
+                                <a href="{{ route('guardian.book.date', ['teacher' => $teacher, 'date' => $availableDate]) }}"
+                                   class="shrink-0 flex flex-col items-center justify-center w-[62px] h-[76px] rounded-2xl border-2 transition
+                                          {{ $isSelected
+                                                ? 'bg-[#0e6e73] border-[#0e6e73] text-white shadow-md'
+                                                : 'bg-white border-gray-200 text-gray-700 hover:border-[#f2952b] hover:bg-orange-50' }}">
+                                    <span class="text-[10px] font-semibold uppercase tracking-wide {{ $isSelected ? 'text-[#bfe3e3]' : 'text-gray-400' }}">
+                                        {{ $dayAbbr[$d->dayOfWeekIso - 1] }}
+                                    </span>
+                                    <span class="text-2xl font-bold leading-tight mt-0.5">{{ $d->format('j') }}</span>
+                                    <span class="text-[10px] font-medium {{ $isSelected ? 'text-[#bfe3e3]' : 'text-gray-400' }}">
+                                        {{ $monthAbbr[$d->month - 1] }}
+                                    </span>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
             </div>
 
-            @if ($slots !== null)
-                <div class="bg-white shadow-sm sm:rounded-lg p-6">
-                    <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">
-                        {{ __('Διαθέσιμες ώρες για :date', ['date' => \Illuminate\Support\Carbon::parse($date)->translatedFormat('l, d/m/Y')]) }}
+            @if ($date)
+                <div class="bg-white shadow-sm rounded-2xl p-5 sm:p-6">
+                    <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">
+                        {{ __('Διαθέσιμες ώρες') }} &middot; {{ \Illuminate\Support\Carbon::parse($date)->translatedFormat('l, d/m/Y') }}
                     </h3>
 
                     @if ($slots->isEmpty())
-                        <p class="mt-4 text-sm text-gray-500">{{ __('Δεν υπάρχει διαθεσιμότητα αυτή την ημέρα. Επιλέξτε άλλη ημερομηνία από το ημερολόγιο.') }}</p>
+                        <p class="mt-4 text-sm text-gray-500">{{ __('Δεν υπάρχει πλέον διαθεσιμότητα αυτή την ημέρα. Επιλέξτε άλλη ημερομηνία παραπάνω.') }}</p>
                     @else
-                        <div class="mt-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
+                        <div class="mt-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5">
                             @foreach ($slots as $slot)
                                 @if ($slot->status->value === 'available')
                                     <a href="{{ route('guardian.book.confirm', ['teacher' => $teacher, 'slot' => $slot]) }}"
-                                       class="flex items-center justify-center min-h-11 text-center text-xs font-medium border rounded-md py-2 px-1 bg-green-100 text-green-800 border-green-300 hover:bg-green-200">
-                                        🟢 {{ substr($slot->start_time, 0, 5) }}
+                                       class="flex items-center justify-center min-h-[46px] text-center text-sm font-semibold rounded-xl transition bg-[#0e6e73]/10 text-[#0e6e73] hover:bg-[#0e6e73] hover:text-white">
+                                        {{ substr($slot->start_time, 0, 5) }}
                                     </a>
                                 @else
-                                    <span class="flex items-center justify-center min-h-11 text-center text-xs font-medium border rounded-md py-2 px-1 bg-red-100 text-red-800 border-red-300 cursor-not-allowed">
-                                        🔴 {{ substr($slot->start_time, 0, 5) }}
+                                    <span class="flex items-center justify-center min-h-[46px] text-center text-sm font-medium rounded-xl bg-gray-100 text-gray-400 line-through cursor-not-allowed">
+                                        {{ substr($slot->start_time, 0, 5) }}
                                     </span>
                                 @endif
                             @endforeach
