@@ -59,6 +59,90 @@ class GuardianBookingFlowTest extends TestCase
         $response->assertSee('17:00');
     }
 
+    public function test_visiting_a_teacher_fresh_auto_selects_the_first_available_date(): void
+    {
+        $guardian = User::factory()->guardian()->create();
+        $slot = $this->makeSlot();
+
+        // No `date` or `month` query param — a guardian just clicked
+        // through from the teacher list.
+        $response = $this->actingAs($guardian)->get(route('guardian.book.date', [
+            'teacher' => $slot->teacher,
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('17:00');
+    }
+
+    public function test_auto_select_jumps_to_the_month_of_the_first_availability(): void
+    {
+        $guardian = User::factory()->guardian()->create();
+        $teacher = User::factory()->teacher()->create();
+        $farDate = today()->addDays(40);
+        $availability = Availability::factory()->for($teacher, 'teacher')->create([
+            'date' => $farDate->toDateString(),
+        ]);
+        AppointmentSlot::factory()->create([
+            'teacher_id' => $teacher->id,
+            'availability_id' => $availability->id,
+            'date' => $availability->date->toDateString(),
+            'start_time' => '09:00:00',
+            'end_time' => '09:05:00',
+            'status' => SlotStatus::Available,
+        ]);
+
+        $response = $this->actingAs($guardian)->get(route('guardian.book.date', [
+            'teacher' => $teacher,
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('09:00');
+        $response->assertSee($farDate->translatedFormat('F Y'));
+    }
+
+    public function test_visiting_a_teacher_with_no_availability_does_not_auto_select_anything(): void
+    {
+        $guardian = User::factory()->guardian()->create();
+        $teacher = User::factory()->teacher()->create();
+
+        $response = $this->actingAs($guardian)->get(route('guardian.book.date', [
+            'teacher' => $teacher,
+        ]));
+
+        $response->assertOk();
+        $response->assertSee(__('Ημέρες με διαθέσιμα ραντεβού'));
+    }
+
+    public function test_explicit_date_navigation_is_not_overridden_by_auto_select(): void
+    {
+        $guardian = User::factory()->guardian()->create();
+        $teacher = User::factory()->teacher()->create();
+        $availability = Availability::factory()->for($teacher, 'teacher')->create([
+            'date' => today()->addDay()->toDateString(),
+        ]);
+        AppointmentSlot::factory()->create([
+            'teacher_id' => $teacher->id,
+            'availability_id' => $availability->id,
+            'date' => $availability->date->toDateString(),
+            'start_time' => '10:00:00',
+            'end_time' => '10:05:00',
+            'status' => SlotStatus::Available,
+        ]);
+
+        // Explicitly navigating to a date with no slots must show "no
+        // availability" for that date, not silently jump back to the
+        // one date that does have slots.
+        $emptyDate = today()->addDays(2);
+        $response = $this->actingAs($guardian)->get(route('guardian.book.date', [
+            'teacher' => $teacher,
+            'date' => $emptyDate->toDateString(),
+        ]));
+
+        $response->assertOk();
+        $response->assertDontSee('10:00');
+        $response->assertSee('Δεν υπάρχει διαθεσιμότητα αυτή την ημέρα');
+    }
+
     public function test_date_picking_calendar_supports_touch_swipe(): void
     {
         $guardian = User::factory()->guardian()->create();

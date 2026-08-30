@@ -37,6 +37,25 @@ class BookingController extends Controller
         $date = $request->string('date')->toString();
         $requestedMonth = $request->string('month')->toString();
 
+        // A completely fresh visit (no explicit date/month yet, i.e. just
+        // clicked through from the teacher list) jumps straight to the
+        // first bookable date, if the teacher has one — saves paging
+        // through empty months to find it. Any explicit navigation
+        // (a date or month in the URL) always wins over this.
+        if (! $request->filled('date') && ! $request->filled('month')) {
+            $firstAvailableDate = AppointmentSlot::where('teacher_id', $teacher->id)
+                ->where('status', SlotStatus::Available)
+                ->where('date', '>=', today()->toDateString())
+                ->orderBy('date')
+                ->value('date');
+
+            if ($firstAvailableDate) {
+                $date = $firstAvailableDate instanceof \DateTimeInterface
+                    ? $firstAvailableDate->format('Y-m-d')
+                    : (string) $firstAvailableDate;
+            }
+        }
+
         $monthStart = $requestedMonth
             ? Carbon::createFromFormat('Y-m', $requestedMonth)->startOfMonth()
             : ($date ? Carbon::parse($date)->startOfMonth() : today()->startOfMonth());
