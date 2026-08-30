@@ -45,6 +45,39 @@ class GuardianBookingFlowTest extends TestCase
         $response->assertDontSee('Inactive');
     }
 
+    public function test_teacher_list_color_codes_cards_by_availability(): void
+    {
+        $guardian = User::factory()->guardian()->create();
+        $availableTeacher = User::factory()->teacher()->create(['first_name' => 'Availableteacher']);
+        $emptyTeacher = User::factory()->teacher()->create(['first_name' => 'Emptyteacher']);
+
+        $availability = Availability::factory()->for($availableTeacher, 'teacher')->create([
+            'date' => today()->addDay()->toDateString(),
+        ]);
+        AppointmentSlot::factory()->create([
+            'teacher_id' => $availableTeacher->id,
+            'availability_id' => $availability->id,
+            'date' => $availability->date->toDateString(),
+            'start_time' => '09:00:00',
+            'end_time' => '09:05:00',
+            'status' => SlotStatus::Available,
+        ]);
+
+        $response = $this->actingAs($guardian)->get(route('guardian.book.teachers'));
+        $content = $response->getContent();
+
+        $response->assertSee(__('Έχει διαθέσιμα ραντεβού'));
+        $response->assertSee(__('Δεν έχει ανοίξει διαθέσιμες ημερομηνίες αυτή τη στιγμή'));
+
+        $availablePos = strpos($content, 'Availableteacher');
+        $emptyPos = strpos($content, 'Emptyteacher');
+        $this->assertNotFalse($availablePos);
+        $this->assertNotFalse($emptyPos);
+
+        $this->assertStringContainsString('bg-green-50', substr($content, max(0, $availablePos - 400), 400));
+        $this->assertStringContainsString('bg-gray-50', substr($content, max(0, $emptyPos - 400), 400));
+    }
+
     public function test_guardian_can_see_available_slots_for_a_date(): void
     {
         $guardian = User::factory()->guardian()->create();

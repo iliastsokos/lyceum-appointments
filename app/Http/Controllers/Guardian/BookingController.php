@@ -26,7 +26,17 @@ class BookingController extends Controller
             ->orderBy('last_name')
             ->get();
 
-        return view('guardian.booking.teachers', ['teachers' => $teachers]);
+        $teacherIdsWithAvailability = AppointmentSlot::where('status', SlotStatus::Available)
+            ->where('date', '>=', today()->toDateString())
+            ->whereIn('teacher_id', $teachers->pluck('id'))
+            ->distinct()
+            ->pluck('teacher_id')
+            ->all();
+
+        return view('guardian.booking.teachers', [
+            'teachers' => $teachers,
+            'teacherIdsWithAvailability' => $teacherIdsWithAvailability,
+        ]);
     }
 
     public function pickDate(Request $request, User $teacher): View
