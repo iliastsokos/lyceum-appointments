@@ -8,7 +8,6 @@ use App\Exceptions\SlotUnavailableException;
 use App\Models\Appointment;
 use App\Models\AppointmentSlot;
 use App\Models\Child;
-use App\Models\Notification;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
@@ -17,6 +16,8 @@ use Illuminate\Validation\ValidationException;
 
 class BookingService
 {
+    public function __construct(private readonly NotificationService $notifications) {}
+
     /**
      * Atomically book a slot for a guardian's child.
      *
@@ -59,17 +60,17 @@ class BookingService
 
                 $lockedSlot->update(['status' => SlotStatus::Booked]);
 
-                Notification::create([
-                    'user_id' => $lockedSlot->teacher_id,
-                    'type' => 'appointment_booked',
-                    'title' => 'Νέο ραντεβού',
-                    'message' => sprintf(
+                $this->notifications->send(
+                    $lockedSlot->teacher,
+                    'appointment_booked',
+                    'Νέο ραντεβού',
+                    sprintf(
                         'Ο κηδεμόνας %s έκλεισε ραντεβού για τον/την %s στις %s.',
                         $guardian->full_name,
                         $child->full_name,
                         substr($lockedSlot->start_time, 0, 5),
                     ),
-                ]);
+                );
 
                 return $appointment;
             });
@@ -117,16 +118,16 @@ class BookingService
                 $slot->update(['status' => SlotStatus::Available]);
             }
 
-            Notification::create([
-                'user_id' => $locked->teacher_id,
-                'type' => 'appointment_cancelled',
-                'title' => 'Ακύρωση ραντεβού',
-                'message' => sprintf(
+            $this->notifications->send(
+                $locked->teacher,
+                'appointment_cancelled',
+                'Ακύρωση ραντεβού',
+                sprintf(
                     'Ο κηδεμόνας %s ακύρωσε το ραντεβού στις %s.',
                     $locked->guardian->full_name,
                     $slot ? substr($slot->start_time, 0, 5) : '',
                 ),
-            ]);
+            );
 
             return $locked;
         });
