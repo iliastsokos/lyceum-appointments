@@ -6,7 +6,11 @@
     </x-slot>
 
     <div class="py-12">
-        <div class="max-w-xl mx-auto sm:px-6 lg:px-8">
+        <div class="max-w-xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            <div>
+                <a href="{{ route('guardian.book.teachers') }}" class="text-sm text-indigo-600 hover:text-indigo-900">&laquo; {{ __('Επιστροφή στη λίστα εκπαιδευτικών') }}</a>
+            </div>
+
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
                 <h3 class="text-sm font-medium text-gray-500 uppercase tracking-wide">{{ __('Επιλέξτε το παιδί σας και επιβεβαιώστε') }}</h3>
 
@@ -33,8 +37,7 @@
 
                 @if ($children->isEmpty())
                     <p class="mt-4 text-sm text-gray-600">
-                        {{ __('Πρέπει να προσθέσετε ένα παιδί πριν κλείσετε ραντεβού.') }}
-                        <a href="{{ route('guardian.children.create') }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Προσθήκη παιδιού') }}</a>
+                        {{ __('Δεν έχετε καταχωρημένα παιδιά. Επικοινωνήστε με τη διοίκηση του σχολείου για να προστεθούν πριν κλείσετε ραντεβού.') }}
                     </p>
                 @else
                     <form

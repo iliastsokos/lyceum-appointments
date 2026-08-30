@@ -8,16 +8,11 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                <div class="flex items-center justify-between">
-                    <h3 class="text-lg font-medium text-gray-900">{{ __('Τα Παιδιά μου') }}</h3>
-                    <a href="{{ route('guardian.children.create') }}" class="inline-flex items-center px-4 py-2 bg-gray-800 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
-                        {{ __('Προσθήκη Παιδιού') }}
-                    </a>
-                </div>
+                <h3 class="text-lg font-medium text-gray-900">{{ __('Τα Παιδιά μου') }}</h3>
 
                 @if ($children->isEmpty())
                     <p class="mt-4 text-sm text-gray-600">
-                        {{ __('Δεν έχετε προσθέσει ακόμα κανένα παιδί. Προσθέστε ένα παιδί για να ξεκινήσετε να κλείνετε ραντεβού.') }}
+                        {{ __('Δεν έχετε καταχωρημένα παιδιά. Επικοινωνήστε με τη διοίκηση του σχολείου για να προστεθούν.') }}
                     </p>
                 @else
                     <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">

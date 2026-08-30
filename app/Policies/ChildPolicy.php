@@ -18,12 +18,13 @@ class ChildPolicy
     /**
      * Determine whether the user can create models.
      *
-     * Guardians may create children for their own account; admins may
-     * create a child for any guardian via the admin panel.
+     * Admin-only: guardians can no longer add their own children (spec
+     * change) — new children are added by an admin, from the guardian's
+     * edit page or via bulk Excel import.
      */
     public function create(User $user): bool
     {
-        return $user->isAdmin() || $user->isGuardian();
+        return $user->isAdmin();
     }
 
     /**

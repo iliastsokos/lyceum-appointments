@@ -105,18 +105,19 @@ class SchoolClassManagementTest extends TestCase
         $this->actingAs($guardian)->post(route('admin.school-classes.store'), ['name' => 'D1'])->assertForbidden();
     }
 
-    public function test_guardian_sees_admin_managed_classes_when_adding_a_child(): void
+    public function test_admin_sees_admin_managed_classes_when_adding_a_child(): void
     {
+        $admin = User::factory()->admin()->create();
         $guardian = User::factory()->guardian()->create();
         SchoolClass::factory()->create(['name' => 'D1']);
 
-        $response = $this->actingAs($guardian)->post(route('guardian.children.store'), [
+        $response = $this->actingAs($admin)->post(route('admin.guardians.children.store', $guardian), [
             'first_name' => 'Maria',
             'last_name' => 'Papadopoulou',
             'class' => 'D1',
         ]);
 
-        $response->assertRedirect(route('guardian.dashboard'));
-        $this->assertDatabaseHas('children', ['first_name' => 'Maria', 'class' => 'D1']);
+        $response->assertRedirect(route('admin.guardians.edit', $guardian));
+        $this->assertDatabaseHas('children', ['guardian_id' => $guardian->id, 'first_name' => 'Maria', 'class' => 'D1']);
     }
 }

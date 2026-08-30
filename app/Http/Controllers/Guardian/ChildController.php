@@ -12,22 +12,6 @@ use Illuminate\View\View;
 
 class ChildController extends Controller
 {
-    public function create(): View
-    {
-        $this->authorize('create', Child::class);
-
-        return view('guardian.children.create', ['schoolClasses' => SchoolClass::names()]);
-    }
-
-    public function store(StoreChildRequest $request): RedirectResponse
-    {
-        $this->authorize('create', Child::class);
-
-        $request->user()->children()->create($request->validated());
-
-        return redirect()->route('guardian.dashboard')->with('status', 'child-added');
-    }
-
     public function edit(Child $child): View
     {
         $this->authorize('update', $child);

@@ -59,6 +59,36 @@ class GuardianBookingFlowTest extends TestCase
         $response->assertSee('17:00');
     }
 
+    public function test_date_picking_page_links_back_to_the_teacher_list(): void
+    {
+        $guardian = User::factory()->guardian()->create();
+        $slot = $this->makeSlot();
+
+        $response = $this->actingAs($guardian)->get(route('guardian.book.date', [
+            'teacher' => $slot->teacher,
+            'date' => $slot->date->toDateString(),
+        ]));
+
+        $response->assertSee(route('guardian.book.teachers'), false);
+        $response->assertSee('Επιστροφή στη λίστα εκπαιδευτικών');
+        $response->assertDontSee('Ακύρωση');
+    }
+
+    public function test_confirm_page_links_back_to_the_teacher_list(): void
+    {
+        $guardian = User::factory()->guardian()->create();
+        $slot = $this->makeSlot();
+
+        $response = $this->actingAs($guardian)->get(route('guardian.book.confirm', [
+            'teacher' => $slot->teacher,
+            'slot' => $slot,
+        ]));
+
+        $response->assertSee(route('guardian.book.teachers'), false);
+        $response->assertSee('Επιστροφή στη λίστα εκπαιδευτικών');
+        $response->assertDontSee('Ακύρωση');
+    }
+
     public function test_guardian_can_book_an_available_slot_for_their_child(): void
     {
         $guardian = User::factory()->guardian()->create();
