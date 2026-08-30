@@ -47,7 +47,7 @@
                             <tr class="text-left text-gray-500">
                                 <th class="py-2 pr-4">{{ __('Όνομα') }}</th>
                                 <th class="py-2 pr-4">{{ __('Email') }}</th>
-                                <th class="py-2 pr-4">{{ __('Μάθημα') }}</th>
+                                <th class="py-2 pr-4">{{ __('Ειδικότητα') }}</th>
                                 <th class="py-2 pr-4">{{ __('Κατάσταση') }}</th>
                                 <th class="py-2 pr-4"></th>
                             </tr>
