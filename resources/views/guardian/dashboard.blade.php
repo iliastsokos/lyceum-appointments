@@ -27,14 +27,17 @@
             </div>
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
-                <div class="flex items-center justify-between">
+                <div class="flex flex-wrap items-center justify-between gap-3">
                     <h3 class="text-lg font-medium text-gray-900">{{ __('Προσεχή Ραντεβού') }}</h3>
-                    <div class="flex gap-3">
-                        <a href="{{ route('guardian.book.teachers') }}" class="inline-flex items-center px-4 py-2 bg-[#f2952b] border border-transparent rounded-md font-semibold text-sm text-white hover:bg-[#e08419] focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2">
+                    <div class="flex flex-wrap gap-3">
+                        <a href="{{ route('guardian.book.teachers') }}" class="inline-flex items-center px-6 py-3 bg-[#f2952b] border border-transparent rounded-md font-semibold text-base text-white hover:bg-[#e08419] focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2">
                             {{ __('Κλείσε Ραντεβού') }}
                         </a>
-                        <a href="{{ route('guardian.appointments.index') }}" class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-sm text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                            {{ __('Προβολή Όλων') }}
+                        <a href="{{ route('guardian.appointments.index') }}" class="inline-flex items-center px-6 py-3 bg-white border border-gray-300 rounded-md font-semibold text-base text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                            {{ __('Όλα τα Ραντεβού') }}
+                        </a>
+                        <a href="/user-guides/odigos-kidemona.pdf" target="_blank" rel="noopener" class="inline-flex items-center px-4 py-2 border border-[#0e6e73] rounded-md font-medium text-sm text-[#0e6e73] hover:bg-[#0e6e73] hover:text-white transition focus:outline-none focus:ring-2 focus:ring-[#0e6e73] focus:ring-offset-2">
+                            📄 {{ __('Οδηγός Χρήσης (PDF)') }}
                         </a>
                     </div>
                 </div>

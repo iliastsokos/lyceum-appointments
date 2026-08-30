@@ -10,9 +10,16 @@
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                 <h3 class="text-lg font-medium text-gray-900">{{ __('Καλώς ήρθατε, :name', ['name' => $teacher->full_name]) }}</h3>
                 <p class="mt-1 text-sm text-gray-600">{{ __('Ειδικότητα') }}: {{ $teacher->subject }}</p>
-                <div class="mt-4 flex gap-4 text-sm">
-                    <a href="{{ route('teacher.availability.index') }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Διαχείριση Διαθεσιμότητάς μου') }}</a>
-                    <a href="{{ route('teacher.appointments.index') }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Όλα τα Ραντεβού') }}</a>
+                <div class="mt-4 flex flex-wrap gap-3">
+                    <a href="{{ route('teacher.availability.index') }}" class="inline-flex items-center px-6 py-3 bg-[#f2952b] border border-transparent rounded-md font-semibold text-base text-white hover:bg-[#e08419] focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2">
+                        {{ __('Διαχείριση Διαθεσιμότητάς μου') }}
+                    </a>
+                    <a href="{{ route('teacher.appointments.index') }}" class="inline-flex items-center px-6 py-3 bg-white border border-gray-300 rounded-md font-semibold text-base text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                        {{ __('Όλα τα Ραντεβού') }}
+                    </a>
+                    <a href="/user-guides/odigos-ekpaideftikou.pdf" target="_blank" rel="noopener" class="inline-flex items-center px-4 py-2 border border-[#0e6e73] rounded-md font-medium text-sm text-[#0e6e73] hover:bg-[#0e6e73] hover:text-white transition focus:outline-none focus:ring-2 focus:ring-[#0e6e73] focus:ring-offset-2">
+                        📄 {{ __('Οδηγός Χρήσης (PDF)') }}
+                    </a>
                 </div>
             </div>
 
