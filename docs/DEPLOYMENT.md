@@ -259,23 +259,36 @@ don't have SSH, skip these three commands — the app runs correctly without
 them, just slightly slower per request; they are a pure optimization, not a
 requirement.
 
-## 10. Cron / scheduler (optional)
+## 10. Cron / scheduler (optional, but recommended if available)
 
-Nothing in this app **requires** a cron job to function — no queued jobs,
-no scheduled reminders exist yet (see `docs/ARCHITECTURE.md`'s extensibility
-notes). One optional housekeeping task exists:
+Nothing in this app **requires** a cron job to function — it runs correctly
+on a host with no Scheduled Tasks at all (e.g. some teacher-level Plesk
+subscriptions don't offer them; see §7's SSH-less admin-creation path and
+the admin dashboard's "Εκτέλεση Ενημερώσεων Βάσης Δεδομένων" button, both
+built specifically for that case). But if your host **does** offer Scheduled
+Tasks, one task unlocks two automatic housekeeping jobs at once:
 
 ```
-php artisan imports:clean-pending
+php /var/www/vhosts/yourdomain.gr/lyceum_appointments/artisan schedule:run
 ```
 
-This deletes abandoned bulk-import upload files (an admin started an import
-preview but never confirmed it) older than 24 hours — pure data hygiene, not
-required for correctness. If Plesk's Scheduled Tasks are available, add it
-to run daily; if not, it's safe to simply never run it (worst case, a few
-small `.xlsx` files accumulate in `storage/app/private/imports/pending`,
-which never affects functionality since real imports always clean up after
-themselves).
+Add this as a Scheduled Task running **every minute** (Laravel's own
+scheduler decides internally what's actually due — most minutes it does
+nothing). This single task is enough to drive `routes/console.php`'s
+`Schedule::command(...)` entries, both currently set to run daily:
+
+- **`db:backup`** — snapshots the SQLite database file into
+  `storage/app/backups/` (outside the public webroot) and keeps the 7 most
+  recent snapshots, deleting older ones automatically. See §12.
+- **`imports:clean-pending`** — deletes abandoned bulk-import upload files
+  (an admin started an import preview but never confirmed it) older than 24
+  hours. Pure data hygiene, not required for correctness — if this never
+  runs, worst case a few small `.xlsx` files accumulate in
+  `storage/app/private/imports/pending`, which never affects functionality.
+
+Adding a future scheduled job later never needs a new Scheduled Task — just
+add another `Schedule::command(...)` line in `routes/console.php` and the
+same one-task-per-minute cron picks it up.
 
 ## 11. Production checklist
 
@@ -307,15 +320,24 @@ Run through this before announcing the system live:
 
 ## 12. Backup recommendations
 
-- **Database**: it's one file — `database/database.sqlite` (plus, if WAL
-  mode has an active checkpoint pending, `database/database.sqlite-wal` and
-  `-shm`; run `php artisan tinker --execute="DB::statement('PRAGMA wal_checkpoint(TRUNCATE)')"`
-  before copying to fold the WAL back into the main file first for a
-  guaranteed-consistent single-file snapshot). Plesk's **Backup Manager**
-  can include arbitrary files in its scheduled backups — enable at least a
-  daily backup with a retention window your host's disk quota allows. This
-  is the single most important backup: it holds every guardian, child,
-  appointment, and availability record.
+- **Database, automatic (recommended)**: if Scheduled Tasks are available
+  (§10), `db:backup` runs daily and writes a snapshot to
+  `storage/app/backups/database-YYYY-MM-DD_HHMMSS.sqlite`, keeping the 7
+  most recent (`--keep=N` to change that). It uses SQLite's own
+  `VACUUM INTO`, which produces a clean, consistent copy in one step —
+  correct even mid-WAL-checkpoint, unlike a plain file copy, so there's no
+  manual `PRAGMA wal_checkpoint` step to remember. `storage/app/` is not
+  web-accessible, so these snapshots aren't publicly downloadable.
+  Periodically copy the `storage/app/backups/` directory itself somewhere
+  off-server (e.g. download via Plesk File Manager occasionally) — backups
+  that live only on the same disk as the database don't protect against
+  losing the whole hosting account.
+- **Database, without a scheduler**: run `php artisan db:backup` by hand
+  now and then (Plesk Scheduled Tasks §7's "Run PHP script" method works
+  fine for a one-off run too), or rely on Plesk's own **Backup Manager**,
+  which can include arbitrary files in its scheduled backups — point it at
+  `database/database.sqlite` directly if `db:backup` isn't running
+  automatically.
 - **Uploaded files**: the app does not retain uploaded Excel files after a
   successful import (deleted immediately on commit — see
   `docs/ARCHITECTURE.md`'s Phase 6 notes) and never stores anything in
@@ -326,8 +348,8 @@ Run through this before announcing the system live:
   losing `APP_KEY` (which would invalidate all existing sessions and any
   encrypted data).
 - Test the restore path at least once before relying on it — an untested
-  backup is not a backup. Restoring is just copying the saved
-  `database.sqlite` back into `database/`.
+  backup is not a backup. Restoring is just copying a saved
+  `database-*.sqlite` file back to `database/database.sqlite`.
 
 ## 13. Troubleshooting
 

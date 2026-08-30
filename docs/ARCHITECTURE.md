@@ -9,6 +9,30 @@ Status: Phases 1–10 complete. This document is updated as later phases land.
 - **Found and fixed a real test-hygiene bug while verifying storage permissions**: none of the Excel import tests used `Storage::fake()`, so every test run wrote real `.xlsx` files to `storage/app/private/imports/pending` with no cleanup — `RefreshDatabase` rolls back database rows, not filesystem writes. Over the course of this project's test runs this had silently accumulated **over 150 leftover files** in real project storage. Fixed by faking the `local` disk in every import test; one test (`test_uploaded_import_file_is_not_stored_under_the_public_webroot`) specifically needed the *real*, unfaked disk configuration to assert the actual security property, so `Storage::fake()` is called there only after capturing the real config value, not in a class-wide `setUp()`.
 - **`README.md`, `AGENTS.md`, `CLAUDE.md` rewritten**: these still held Laravel's generic skeleton content and Phase 1's "install Laravel Boost" bootstrap instructions respectively — both stale by this point. Replaced with a real project overview/quick-start and agent-facing guidance covering the specific non-obvious decisions in this codebase (why `phpunit.xml` uses real MySQL, why `active_slot_id` exists, why `ConcurrentBookingTest` doesn't use `RefreshDatabase`, etc.) so a future contributor — human or AI — doesn't accidentally "simplify" one of them back to something broken.
 
+## Post-launch note — scheduler wired up on the official host
+
+Once the app was actually deployed to the school's own account (rather than
+a teacher-level one), Plesk Scheduled Tasks turned out to be available
+there — unlike the earlier host, which drove the `/setup-admin` and
+"run migrations" web-based workarounds documented in §7 and elsewhere.
+`routes/console.php` now registers two daily `Schedule::command(...)`
+entries: the pre-existing `imports:clean-pending` (previously written but
+never actually run by anything) and a new `db:backup` command, so a single
+Scheduled Task (`php artisan schedule:run`, every minute) drives both —
+and anything scheduled here in the future needs no additional Scheduled
+Task, just another line in `routes/console.php`.
+
+`db:backup` uses SQLite's `VACUUM INTO` rather than a plain `copy()` of the
+database file — this app runs SQLite in WAL mode (§4a), where a plain copy
+mid-write, or before an outstanding WAL checkpoint, can produce an
+inconsistent or incomplete snapshot; `VACUUM INTO` always produces a
+correct, complete single-file copy regardless of WAL state, in one
+transaction. Backups land in `storage/app/backups/` (not web-accessible)
+with the 7 most recent kept by default. Fully documented in
+`docs/DEPLOYMENT.md` §10/§12; this note exists so a future change to the
+storage layout or WAL settings remembers to re-check this command still
+holds.
+
 ## Phase 9 note — testing consolidation
 
 Testing was continuous through every prior phase rather than deferred, so this phase was a consolidation pass: audit coverage against spec §36's full test list, close any real gaps, then run the entire suite fresh from a completely rebuilt database.
