@@ -16,6 +16,12 @@
     app that showed up as an English calendar on desktop Chrome next to a
     Greek one on mobile, for the same user. This renders the calendar
     ourselves so it's always Greek, regardless of device settings.
+
+    A native input's own calendar can't be touched at all — no custom
+    swipe gestures, no styling — so keeping it Greek-only meant giving up
+    swipe-to-change-month on touch devices too, until onTouchStart/onTouchEnd
+    below added that back (swipe the calendar panel left/right, not just the
+    « » buttons).
 --}}
 <div
     x-data="{
@@ -43,6 +49,14 @@
         },
         prevMonth() { this.viewMonth--; if (this.viewMonth < 0) { this.viewMonth = 11; this.viewYear-- } },
         nextMonth() { this.viewMonth++; if (this.viewMonth > 11) { this.viewMonth = 0; this.viewYear++ } },
+        touchStartX: null,
+        onTouchStart(e) { this.touchStartX = e.touches[0].clientX },
+        onTouchEnd(e) {
+            if (this.touchStartX === null) return;
+            const delta = e.changedTouches[0].clientX - this.touchStartX;
+            if (Math.abs(delta) > 40) { delta < 0 ? this.nextMonth() : this.prevMonth() }
+            this.touchStartX = null;
+        },
     }"
     class="relative"
 >
@@ -62,7 +76,10 @@
         x-cloak
         x-on:click.outside="open = false"
         x-on:keydown.escape.window="open = false"
+        x-on:touchstart="onTouchStart($event)"
+        x-on:touchend="onTouchEnd($event)"
         x-transition
+        style="touch-action: pan-y;"
         class="absolute z-20 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-3 w-64"
     >
         <div class="flex items-center justify-between mb-2">
