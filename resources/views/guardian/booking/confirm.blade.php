@@ -8,7 +8,7 @@
     <div class="py-12">
         <div class="max-w-xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <div>
-                <a href="{{ route('guardian.book.teachers') }}" class="text-sm text-indigo-600 hover:text-indigo-900">&laquo; {{ __('Επιστροφή στη λίστα εκπαιδευτικών') }}</a>
+                <a href="{{ route('guardian.book.teachers') }}" class="inline-flex items-center gap-1 px-4 py-1.5 rounded-[25px] border border-[#0e6e73] text-sm font-medium text-[#0e6e73] hover:bg-[#0e6e73] hover:text-white transition">&laquo; {{ __('Επιστροφή στη λίστα εκπαιδευτικών') }}</a>
             </div>
 
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
