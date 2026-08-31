@@ -264,6 +264,23 @@ class GuardianBookingFlowTest extends TestCase
         $this->assertSame(SlotStatus::Booked, $slot->fresh()->status);
     }
 
+    public function test_a_successful_booking_shows_a_confirmation_message_on_the_dashboard(): void
+    {
+        $guardian = User::factory()->guardian()->create();
+        $child = Child::factory()->for($guardian, 'guardian')->create();
+        $slot = $this->makeSlot();
+
+        $response = $this->actingAs($guardian)
+            ->followingRedirects()
+            ->post(route('guardian.book.store', [
+                'teacher' => $slot->teacher,
+                'slot' => $slot,
+            ]), ['child_id' => $child->id]);
+
+        $response->assertOk();
+        $response->assertSee('Το ραντεβού σας κλείστηκε με επιτυχία.');
+    }
+
     public function test_booking_creates_a_notification_for_the_teacher(): void
     {
         $guardian = User::factory()->guardian()->create();

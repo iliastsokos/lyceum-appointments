@@ -7,6 +7,12 @@
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8 space-y-6">
+            @if (session('status') === 'appointment-booked')
+                <div class="bg-green-50 border border-green-300 text-green-900 rounded-md p-4 text-sm">
+                    ✓ {{ __('Το ραντεβού σας κλείστηκε με επιτυχία.') }}
+                </div>
+            @endif
+
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                 <h3 class="text-lg font-medium text-gray-900">{{ __('Τα Παιδιά μου') }}</h3>
 
