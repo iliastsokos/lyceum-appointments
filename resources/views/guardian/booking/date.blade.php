@@ -68,7 +68,7 @@
                     @else
                         <div class="mt-4 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2.5">
                             @foreach ($slots as $slot)
-                                @if ($slot->status->value === 'available')
+                                @if ($slot->isBookable())
                                     <a href="{{ route('guardian.book.confirm', ['teacher' => $teacher, 'slot' => $slot]) }}"
                                        class="flex items-center justify-center min-h-[46px] text-center text-sm font-semibold rounded-xl transition bg-[#0e6e73]/10 text-[#0e6e73] hover:bg-[#0e6e73] hover:text-white">
                                         {{ substr($slot->start_time, 0, 5) }}

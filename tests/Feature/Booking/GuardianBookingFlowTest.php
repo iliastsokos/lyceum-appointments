@@ -10,6 +10,7 @@ use App\Models\Availability;
 use App\Models\Child;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Tests\TestCase;
 
 class GuardianBookingFlowTest extends TestCase
@@ -76,6 +77,31 @@ class GuardianBookingFlowTest extends TestCase
 
         $this->assertStringContainsString('bg-green-50', substr($content, max(0, $availablePos - 400), 400));
         $this->assertStringContainsString('bg-gray-50', substr($content, max(0, $emptyPos - 400), 400));
+    }
+
+    public function test_teacher_list_shows_gray_when_the_only_available_slot_today_has_passed(): void
+    {
+        $this->travelTo(Carbon::parse('2026-09-15 20:00:00'));
+
+        $guardian = User::factory()->guardian()->create();
+        $teacher = User::factory()->teacher()->create(['first_name' => 'Pastonlyteacher']);
+        $availability = Availability::factory()->for($teacher, 'teacher')->create(['date' => today()->toDateString()]);
+
+        AppointmentSlot::factory()->create([
+            'teacher_id' => $teacher->id,
+            'availability_id' => $availability->id,
+            'date' => today()->toDateString(),
+            'start_time' => '09:00:00',
+            'end_time' => '09:05:00',
+            'status' => SlotStatus::Available,
+        ]);
+
+        $response = $this->actingAs($guardian)->get(route('guardian.book.teachers'));
+        $content = $response->getContent();
+
+        $pos = strpos($content, 'Pastonlyteacher');
+        $this->assertNotFalse($pos);
+        $this->assertStringContainsString('bg-gray-50', substr($content, max(0, $pos - 400), 400));
     }
 
     public function test_guardian_can_see_available_slots_for_a_date(): void
@@ -182,6 +208,79 @@ class GuardianBookingFlowTest extends TestCase
         $response->assertOk();
         $response->assertSee('14:00');
         $response->assertDontSee('10:00');
+    }
+
+    public function test_a_past_time_slot_today_is_shown_as_unavailable_not_bookable(): void
+    {
+        $this->travelTo(Carbon::parse('2026-09-15 12:00:00'));
+
+        $guardian = User::factory()->guardian()->create();
+        $teacher = User::factory()->teacher()->create();
+        $availability = Availability::factory()->for($teacher, 'teacher')->create(['date' => today()->toDateString()]);
+
+        $pastSlot = AppointmentSlot::factory()->create([
+            'teacher_id' => $teacher->id,
+            'availability_id' => $availability->id,
+            'date' => today()->toDateString(),
+            'start_time' => '09:00:00',
+            'end_time' => '09:05:00',
+            'status' => SlotStatus::Available,
+        ]);
+        $futureSlot = AppointmentSlot::factory()->create([
+            'teacher_id' => $teacher->id,
+            'availability_id' => $availability->id,
+            'date' => today()->toDateString(),
+            'start_time' => '15:00:00',
+            'end_time' => '15:05:00',
+            'status' => SlotStatus::Available,
+        ]);
+
+        $response = $this->actingAs($guardian)->get(route('guardian.book.date', [
+            'teacher' => $teacher,
+            'date' => today()->toDateString(),
+        ]));
+
+        $response->assertOk();
+        $response->assertSee(route('guardian.book.confirm', ['teacher' => $teacher, 'slot' => $futureSlot]), false);
+        $response->assertDontSee(route('guardian.book.confirm', ['teacher' => $teacher, 'slot' => $pastSlot]), false);
+    }
+
+    public function test_visiting_fresh_skips_today_when_all_of_todays_slots_have_already_passed(): void
+    {
+        $this->travelTo(Carbon::parse('2026-09-15 20:00:00'));
+
+        $guardian = User::factory()->guardian()->create();
+        $teacher = User::factory()->teacher()->create();
+
+        $todayAvailability = Availability::factory()->for($teacher, 'teacher')->create(['date' => today()->toDateString()]);
+        AppointmentSlot::factory()->create([
+            'teacher_id' => $teacher->id,
+            'availability_id' => $todayAvailability->id,
+            'date' => today()->toDateString(),
+            'start_time' => '09:00:00',
+            'end_time' => '09:05:00',
+            'status' => SlotStatus::Available,
+        ]);
+
+        $tomorrowAvailability = Availability::factory()->for($teacher, 'teacher')->create(['date' => today()->addDay()->toDateString()]);
+        AppointmentSlot::factory()->create([
+            'teacher_id' => $teacher->id,
+            'availability_id' => $tomorrowAvailability->id,
+            'date' => today()->addDay()->toDateString(),
+            'start_time' => '10:00:00',
+            'end_time' => '10:05:00',
+            'status' => SlotStatus::Available,
+        ]);
+
+        // Nothing left today, so the nearest-date auto-select should skip
+        // straight to tomorrow rather than landing on a dead-end "today"
+        // with everything already crossed out.
+        $response = $this->actingAs($guardian)->get(route('guardian.book.date', [
+            'teacher' => $teacher,
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('10:00');
     }
 
     public function test_requesting_a_date_not_in_the_available_list_falls_back_to_the_nearest(): void
