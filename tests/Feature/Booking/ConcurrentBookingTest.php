@@ -151,6 +151,96 @@ class ConcurrentBookingTest extends TestCase
         @rmdir($scratchDir);
     }
 
+    public function test_two_concurrent_booking_attempts_on_different_slots_of_the_same_teacher_both_succeed(): void
+    {
+        $teacher = User::factory()->teacher()->create();
+        $guardianA = User::factory()->guardian()->create();
+        $guardianB = User::factory()->guardian()->create();
+        $childA = Child::factory()->for($guardianA, 'guardian')->create();
+        $childB = Child::factory()->for($guardianB, 'guardian')->create();
+
+        $this->createdUserIds = [$teacher->id, $guardianA->id, $guardianB->id];
+
+        $this->availability = Availability::factory()->for($teacher, 'teacher')->create([
+            'date' => today()->addDay()->toDateString(),
+        ]);
+
+        $slotA = AppointmentSlot::factory()->create([
+            'teacher_id' => $teacher->id,
+            'availability_id' => $this->availability->id,
+            'date' => $this->availability->date,
+            'start_time' => '09:00:00',
+            'end_time' => '09:05:00',
+            'status' => SlotStatus::Available,
+        ]);
+        $slotB = AppointmentSlot::factory()->create([
+            'teacher_id' => $teacher->id,
+            'availability_id' => $this->availability->id,
+            'date' => $this->availability->date,
+            'start_time' => '09:05:00',
+            'end_time' => '09:10:00',
+            'status' => SlotStatus::Available,
+        ]);
+
+        $scratchDir = sys_get_temp_dir().'/concurrent_booking_test_'.uniqid();
+        mkdir($scratchDir);
+
+        $readyA = "{$scratchDir}/ready_a";
+        $readyB = "{$scratchDir}/ready_b";
+        $go = "{$scratchDir}/go";
+        $resultA = "{$scratchDir}/result_a";
+        $resultB = "{$scratchDir}/result_b";
+
+        $workerScript = realpath(__DIR__.'/../../Support/concurrent_booking_worker.php');
+        $env = $this->workerEnvironment();
+
+        $processA = new Process([PHP_BINARY, $workerScript, (string) $slotA->id, (string) $guardianA->id, (string) $childA->id, $readyA, $go, $resultA], null, $env);
+        $processB = new Process([PHP_BINARY, $workerScript, (string) $slotB->id, (string) $guardianB->id, (string) $childB->id, $readyB, $go, $resultB], null, $env);
+        $processA->setTimeout(30);
+        $processB->setTimeout(30);
+
+        $processA->start();
+        $processB->start();
+
+        $deadline = microtime(true) + 10;
+        while ((! file_exists($readyA) || ! file_exists($readyB)) && microtime(true) < $deadline) {
+            usleep(1000);
+        }
+
+        $this->assertFileExists($readyA, 'Worker A did not become ready in time. stderr: '.$processA->getErrorOutput());
+        $this->assertFileExists($readyB, 'Worker B did not become ready in time. stderr: '.$processB->getErrorOutput());
+
+        // Release both workers as close together as possible so they race
+        // to write to the same SQLite database file (different rows, but
+        // SQLite has no row-level locking — the whole file serializes
+        // writes) inside BookingService::book().
+        file_put_contents($go, '1');
+
+        $processA->wait();
+        $processB->wait();
+
+        $this->assertFileExists($resultA, 'Worker A produced no result. stderr: '.$processA->getErrorOutput());
+        $this->assertFileExists($resultB, 'Worker B produced no result. stderr: '.$processB->getErrorOutput());
+
+        $resultAContents = file_get_contents($resultA);
+        $resultBContents = file_get_contents($resultB);
+
+        $debug = "A: {$resultAContents}\nB: {$resultBContents}";
+
+        $this->assertStringStartsWith('OK:', $resultAContents, "Worker A should succeed booking a different slot.\n{$debug}");
+        $this->assertStringStartsWith('OK:', $resultBContents, "Worker B should succeed booking a different slot.\n{$debug}");
+
+        $this->assertSame(1, Appointment::where('slot_id', $slotA->id)->count());
+        $this->assertSame(1, Appointment::where('slot_id', $slotB->id)->count());
+
+        @unlink($readyA);
+        @unlink($readyB);
+        @unlink($go);
+        @unlink($resultA);
+        @unlink($resultB);
+        @rmdir($scratchDir);
+    }
+
     /**
      * @return array<string, string>
      */

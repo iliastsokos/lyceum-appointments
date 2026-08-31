@@ -13,20 +13,32 @@ class NotificationService
     /**
      * Record an in-app notification and email it in parallel.
      *
-     * Mail delivery failures (e.g. a misconfigured or unreachable SMTP
-     * server) are logged and swallowed rather than thrown: this is called
-     * from inside booking/cancellation database transactions, and losing a
-     * real booking because the school's mail server hiccuped would be far
-     * worse than a guardian/teacher simply not getting the email copy.
+     * Called after the booking/cancellation transaction has already
+     * committed (see BookingService), so a failure here can no longer
+     * threaten a real booking — but on SQLite (single writer for the whole
+     * database file) a momentary lock conflict is still possible, so both
+     * the in-app row and the mail send are logged and swallowed rather than
+     * thrown. Losing the notification is far better than turning it into a
+     * user-facing error for an appointment that already succeeded.
      */
-    public function send(User $user, string $type, string $title, string $message): Notification
+    public function send(User $user, string $type, string $title, string $message): ?Notification
     {
-        $notification = Notification::create([
-            'user_id' => $user->id,
-            'type' => $type,
-            'title' => $title,
-            'message' => $message,
-        ]);
+        try {
+            $notification = Notification::create([
+                'user_id' => $user->id,
+                'type' => $type,
+                'title' => $title,
+                'message' => $message,
+            ]);
+        } catch (Throwable $e) {
+            Log::error('Failed to record in-app notification.', [
+                'user_id' => $user->id,
+                'type' => $type,
+                'exception' => $e->getMessage(),
+            ]);
+
+            $notification = null;
+        }
 
         try {
             $user->notify(new NotificationMail($title, $message));
