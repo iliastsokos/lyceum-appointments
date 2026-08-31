@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\SlotStatus;
+use Carbon\Carbon;
 use Database\Factories\AppointmentSlotFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -60,5 +61,25 @@ class AppointmentSlot extends Model
     public function appointment(): HasOne
     {
         return $this->hasOne(Appointment::class, 'slot_id')->where('status', '!=', 'cancelled');
+    }
+
+    /**
+     * Whether this slot's start time has already gone by. A slot's stored
+     * `status` doesn't change on its own as the clock passes it — this is
+     * the "is it actually still bookable right now" check the booking flow
+     * uses to hide/gray out today's already-past slots instead of letting a
+     * guardian click one only to be told it can't be booked.
+     */
+    public function hasPassed(): bool
+    {
+        return Carbon::parse("{$this->date->toDateString()} {$this->start_time}")->isPast();
+    }
+
+    /**
+     * Whether a guardian could actually book this slot right now.
+     */
+    public function isBookable(): bool
+    {
+        return $this->status === SlotStatus::Available && ! $this->hasPassed();
     }
 }

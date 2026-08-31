@@ -28,6 +28,8 @@ class BookingController extends Controller
 
         $teacherIdsWithAvailability = AppointmentSlot::where('status', SlotStatus::Available)
             ->where('date', '>=', today()->toDateString())
+            ->where(fn ($q) => $q->where('date', '>', today()->toDateString())
+                ->orWhere('start_time', '>', now()->format('H:i:s')))
             ->whereIn('teacher_id', $teachers->pluck('id'))
             ->distinct()
             ->pluck('teacher_id')
@@ -50,6 +52,8 @@ class BookingController extends Controller
         $availableDates = AppointmentSlot::where('teacher_id', $teacher->id)
             ->where('status', SlotStatus::Available)
             ->where('date', '>=', today()->toDateString())
+            ->where(fn ($q) => $q->where('date', '>', today()->toDateString())
+                ->orWhere('start_time', '>', now()->format('H:i:s')))
             ->distinct()
             ->orderBy('date')
             ->pluck('date')
