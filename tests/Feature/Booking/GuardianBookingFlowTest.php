@@ -338,6 +338,28 @@ class GuardianBookingFlowTest extends TestCase
         $this->assertSame(0, Appointment::where('slot_id', $slot->id)->count());
     }
 
+    public function test_the_friendly_slot_taken_message_is_shown_after_a_lost_booking_race(): void
+    {
+        $guardian = User::factory()->guardian()->create();
+        $child = Child::factory()->for($guardian, 'guardian')->create();
+        $slot = $this->makeSlot();
+        $slot->update(['status' => SlotStatus::Booked]);
+
+        // The guardian is redirected back to the date/slot list on a lost
+        // race — that page must actually render the flashed error, or the
+        // guardian sees their chosen slot crossed out with no explanation
+        // and may assume they succeeded.
+        $response = $this->actingAs($guardian)
+            ->followingRedirects()
+            ->post(route('guardian.book.store', [
+                'teacher' => $slot->teacher,
+                'slot' => $slot,
+            ]), ['child_id' => $child->id]);
+
+        $response->assertOk();
+        $response->assertSee('μόλις κλείστηκε από άλλον χρήστη');
+    }
+
     public function test_guardian_cannot_book_a_disabled_slot(): void
     {
         $guardian = User::factory()->guardian()->create();
