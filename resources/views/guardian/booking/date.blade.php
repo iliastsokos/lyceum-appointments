@@ -16,6 +16,12 @@
                 <a href="{{ route('guardian.book.teachers') }}" class="inline-flex items-center gap-1 py-[10px] px-[15px] rounded-[25px] border border-solid border-[#0e6e73] text-sm font-medium text-[#0e6e73] hover:bg-[#0e6e73] hover:text-white transition">&laquo; {{ __('Επιστροφή στη λίστα εκπαιδευτικών') }}</a>
             </div>
 
+            @if ($errors->any())
+                <div class="bg-red-50 border border-red-300 text-red-900 rounded-md p-4 text-sm">
+                    {{ $errors->first() }}
+                </div>
+            @endif
+
             <div class="bg-white shadow-sm rounded-2xl p-5 sm:p-6">
                 <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider">{{ __('Διαθέσιμες Ημερομηνίες') }}</h3>
 
