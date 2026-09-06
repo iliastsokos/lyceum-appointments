@@ -38,8 +38,13 @@ return [
             'database' => env('DB_DATABASE', database_path('database.sqlite')),
             'prefix' => '',
             'foreign_key_constraints' => env('DB_FOREIGN_KEYS', true),
-            'busy_timeout' => null,
-            'journal_mode' => null,
+            // A concurrent booking attempt should wait for the other
+            // transaction to finish and then see the slot as taken, not
+            // fail immediately with "database is locked" — SQLite has no
+            // row-level locking, so the whole database serializes on
+            // writes. 5s comfortably covers a single booking transaction.
+            'busy_timeout' => env('DB_BUSY_TIMEOUT', 5000),
+            'journal_mode' => env('DB_JOURNAL_MODE', 'WAL'),
             'synchronous' => null,
             'transaction_mode' => 'DEFERRED',
         ],
