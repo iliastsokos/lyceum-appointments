@@ -8,7 +8,7 @@
     <div class="py-12">
         <div class="max-w-xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <div class="text-center">
-                <a href="{{ route('guardian.book.teachers') }}" class="inline-flex items-center gap-1 py-[10px] px-[15px] rounded-[25px] border border-solid border-[#0e6e73] text-sm font-medium text-[#0e6e73] hover:bg-[#0e6e73] hover:text-white transition">&laquo; {{ __('Επιστροφή στη λίστα εκπαιδευτικών') }}</a>
+                <a href="{{ route('guardian.book.teachers') }}" class="inline-flex items-center gap-1 py-[10px] px-[15px] rounded-[25px] border border-solid border-primary text-sm font-medium text-primary hover:bg-primary hover:text-white transition">&laquo; {{ __('Επιστροφή στη λίστα εκπαιδευτικών') }}</a>
             </div>
 
             <div class="bg-white shadow-sm rounded-2xl p-5 sm:p-6">
@@ -49,7 +49,7 @@
                     >
                         @csrf
                         <x-input-label for="child_id" :value="__('Μαθητής/-τρια')" />
-                        <select id="child_id" name="child_id" class="mt-1 block w-full border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm" required>
+                        <select id="child_id" name="child_id" class="mt-1 block w-full border-outline focus:border-primary focus:ring-primary rounded-lg shadow-sm text-base py-2.5 px-3.5" required>
                             @foreach ($children as $child)
                                 <option value="{{ $child->id }}">{{ $child->full_name }} — {{ $child->class }}</option>
                             @endforeach
@@ -60,7 +60,7 @@
                             <button
                                 type="submit"
                                 x-bind:disabled="submitting"
-                                class="inline-flex items-center px-6 py-3 bg-[#f2952b] border border-transparent rounded-md font-semibold text-base text-white hover:bg-[#e08419] focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2 disabled:opacity-60"
+                                class="inline-flex items-center px-6 py-3.5 bg-secondary border border-transparent rounded-xl font-semibold text-base text-white shadow-sm hover:bg-secondary-hover focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2 disabled:opacity-60"
                             >
                                 <span x-show="!submitting">{{ __('Επιβεβαίωση Ραντεβού') }}</span>
                                 <span x-show="submitting" x-cloak>{{ __('Γίνεται κράτηση...') }}</span>

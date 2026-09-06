@@ -14,6 +14,26 @@ export default {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
             },
+            colors: {
+                // Copied exactly from the school's own site (lyk-rafin-new.att.sch.gr)
+                // so the app's brand matches the official one pixel-for-pixel.
+                primary: {
+                    DEFAULT: '#1a8399',
+                    tint: '#EDF5F7',
+                    hover: '#177387',
+                    active: '#15697A',
+                },
+                secondary: {
+                    DEFAULT: '#ff9635',
+                    hover: '#E0842F',
+                    active: '#CC782A',
+                },
+                ink: '#1F2937',
+                body: '#606876',
+                surface: '#F8FAFC',
+                outline: '#E6E9EF',
+                muted: '#6E7787',
+            },
         },
     },
 

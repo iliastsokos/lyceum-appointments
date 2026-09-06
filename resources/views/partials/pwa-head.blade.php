@@ -1,5 +1,5 @@
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#0e6e73">
+<meta name="theme-color" content="#1a8399">
 {{-- /icons/ is deliberately avoided: it's a reserved Apache path on some
      shared hosts (the classic mod_autoindex directory-listing icons, e.g.
      /icons/folder.gif) and silently shadows anything the app puts there. --}}

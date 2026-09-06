@@ -13,7 +13,7 @@
     <div class="py-12">
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8 space-y-6">
             <div class="text-center">
-                <a href="{{ route('guardian.book.teachers') }}" class="inline-flex items-center gap-1 py-[10px] px-[15px] rounded-[25px] border border-solid border-[#0e6e73] text-sm font-medium text-[#0e6e73] hover:bg-[#0e6e73] hover:text-white transition">&laquo; {{ __('Επιστροφή στη λίστα εκπαιδευτικών') }}</a>
+                <a href="{{ route('guardian.book.teachers') }}" class="inline-flex items-center gap-1 py-[10px] px-[15px] rounded-[25px] border border-solid border-primary text-sm font-medium text-primary hover:bg-primary hover:text-white transition">&laquo; {{ __('Επιστροφή στη λίστα εκπαιδευτικών') }}</a>
             </div>
 
             @if ($errors->any())
@@ -41,13 +41,13 @@
                                 <a href="{{ route('guardian.book.date', ['teacher' => $teacher, 'date' => $availableDate]) }}"
                                    class="shrink-0 flex flex-col items-center justify-center w-[62px] h-[76px] rounded-2xl border-2 transition
                                           {{ $isSelected
-                                                ? 'bg-[#0e6e73] border-[#0e6e73] text-white shadow-md'
-                                                : 'bg-white border-gray-200 text-gray-700 hover:border-[#f2952b] hover:bg-orange-50' }}">
-                                    <span class="text-[10px] font-semibold uppercase tracking-wide {{ $isSelected ? 'text-[#bfe3e3]' : 'text-gray-400' }}">
+                                                ? 'bg-primary border-primary text-white shadow-md'
+                                                : 'bg-white border-gray-200 text-gray-700 hover:border-secondary hover:bg-orange-50' }}">
+                                    <span class="text-[10px] font-semibold uppercase tracking-wide {{ $isSelected ? 'text-white/70' : 'text-gray-400' }}">
                                         {{ $dayAbbr[$d->dayOfWeekIso - 1] }}
                                     </span>
                                     <span class="text-2xl font-bold leading-tight mt-0.5">{{ $d->format('j') }}</span>
-                                    <span class="text-[10px] font-medium {{ $isSelected ? 'text-[#bfe3e3]' : 'text-gray-400' }}">
+                                    <span class="text-[10px] font-medium {{ $isSelected ? 'text-white/70' : 'text-gray-400' }}">
                                         {{ $monthAbbr[$d->month - 1] }}
                                     </span>
                                 </a>
@@ -70,7 +70,7 @@
                             @foreach ($slots as $slot)
                                 @if ($slot->isBookable())
                                     <a href="{{ route('guardian.book.confirm', ['teacher' => $teacher, 'slot' => $slot]) }}"
-                                       class="flex items-center justify-center min-h-[46px] text-center text-sm font-semibold rounded-xl transition bg-[#0e6e73]/10 text-[#0e6e73] hover:bg-[#0e6e73] hover:text-white">
+                                       class="flex items-center justify-center min-h-[46px] text-center text-sm font-semibold rounded-xl transition bg-primary-tint text-primary hover:bg-primary hover:text-white">
                                         {{ substr($slot->start_time, 0, 5) }}
                                     </a>
                                 @else

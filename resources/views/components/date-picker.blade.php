@@ -66,7 +66,7 @@
         type="button"
         id="{{ $id }}"
         @click="open = ! open"
-        {{ $attributes->merge(['class' => 'w-full text-left border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm']) }}
+        {{ $attributes->merge(['class' => 'w-full text-left border-outline focus:border-primary focus:ring-primary rounded-lg shadow-sm text-base py-2.5 px-3.5']) }}
     >
         <span x-text="displayValue || 'Επιλέξτε ημερομηνία'" :class="{ 'text-gray-400': ! selected }"></span>
     </button>
@@ -102,7 +102,7 @@
                     @click="select(d)"
                     :disabled="isDisabled(d)"
                     :class="{
-                        'bg-[#0e6e73] text-white': selected === toIso(viewYear, viewMonth, d),
+                        'bg-primary text-white': selected === toIso(viewYear, viewMonth, d),
                         'text-gray-300 cursor-not-allowed': isDisabled(d),
                         'hover:bg-gray-100 text-gray-700': ! isDisabled(d) && selected !== toIso(viewYear, viewMonth, d),
                     }"

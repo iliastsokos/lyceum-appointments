@@ -5,3 +5,18 @@
 [x-cloak] {
     display: none !important;
 }
+
+/* Named utilities rather than Tailwind arbitrary values: calc() requires
+   spaces around `+`, which arbitrary-value syntax can't express safely. */
+.pt-safe {
+    padding-top: env(safe-area-inset-top);
+}
+
+.pb-safe {
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* 4rem must stay in sync with the bottom nav bar's h-16. */
+.pb-nav {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+}
