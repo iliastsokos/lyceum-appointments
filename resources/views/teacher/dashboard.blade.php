@@ -11,10 +11,10 @@
                 <h3 class="text-lg font-medium text-gray-900">{{ __('Καλώς ήρθατε, :name', ['name' => $teacher->full_name]) }}</h3>
                 <p class="mt-1 text-sm text-gray-600">{{ __('Ειδικότητα') }}: {{ $teacher->subject }}</p>
                 <div class="mt-4 flex flex-wrap gap-3">
-                    <a href="{{ route('teacher.availability.index') }}" class="inline-flex items-center px-6 py-3.5 bg-secondary border border-transparent rounded-xl font-semibold text-base text-white shadow-sm hover:bg-secondary-hover focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2">
+                    <a href="{{ route('teacher.availability.index') }}" class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3.5 bg-secondary border border-transparent rounded-xl font-semibold text-base text-white shadow-sm hover:bg-secondary-hover focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2">
                         {{ __('Διαχείριση Διαθεσιμότητάς μου') }}
                     </a>
-                    <a href="{{ route('teacher.appointments.index') }}" class="inline-flex items-center px-6 py-3.5 bg-white border border-primary rounded-xl font-semibold text-base text-primary shadow-sm hover:bg-primary-tint focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
+                    <a href="{{ route('teacher.appointments.index') }}" class="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3.5 bg-white border border-primary rounded-xl font-semibold text-base text-primary shadow-sm hover:bg-primary-tint focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
                         {{ __('Όλα τα Ραντεβού') }}
                     </a>
                     <a href="/user-guides/odigos-ekpaideftikou.pdf" target="_blank" rel="noopener" class="inline-flex items-center px-4 py-2 border border-primary rounded-md font-medium text-sm text-primary hover:bg-primary hover:text-white transition focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2">
