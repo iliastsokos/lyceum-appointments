@@ -23,7 +23,7 @@
 
             <h1 class="mt-6 text-2xl sm:text-3xl font-bold text-ink">Σύστημα Ραντεβού</h1>
 
-            <p class="mt-3 max-w-sm text-base text-body leading-relaxed">
+            <p class="mt-3 w-full max-w-sm text-base text-body leading-relaxed">
                 Ηλεκτρονική πλατφόρμα κλεισίματος ραντεβού ανάμεσα σε κηδεμόνες και εκπαιδευτικούς του σχολείου. Οι κωδικοί πρόσβασης δίνονται από τη Διεύθυνση.
             </p>
 
