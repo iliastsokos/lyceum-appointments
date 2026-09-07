@@ -22,7 +22,6 @@ class CreateAdminCommandTest extends TestCase
 
         $admin = User::where('email', 'admin@example.gr')->firstOrFail();
         $this->assertSame(UserRole::Admin, $admin->role);
-        $this->assertFalse($admin->must_change_password);
     }
 
     public function test_it_rejects_a_duplicate_email(): void

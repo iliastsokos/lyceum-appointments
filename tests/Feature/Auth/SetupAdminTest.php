@@ -31,7 +31,6 @@ class SetupAdminTest extends TestCase
 
         $admin = User::where('email', 'admin@example.gr')->firstOrFail();
         $this->assertSame(UserRole::Admin, $admin->role);
-        $this->assertFalse($admin->must_change_password);
         $this->assertTrue(Hash::check('1234', $admin->password));
         $this->assertAuthenticatedAs($admin);
     }

@@ -68,7 +68,6 @@ class CreateAdminCommand extends Command
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'status' => UserStatus::Active,
-            'must_change_password' => false,
         ]);
 
         $this->info("Administrator account created for {$validated['email']}.");

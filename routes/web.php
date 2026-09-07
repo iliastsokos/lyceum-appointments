@@ -7,7 +7,6 @@ use App\Http\Controllers\Admin\SchoolClassController;
 use App\Http\Controllers\Admin\SystemController;
 use App\Http\Controllers\Admin\TeacherAvailabilityController as AdminTeacherAvailabilityController;
 use App\Http\Controllers\Admin\TeacherController as AdminTeacherController;
-use App\Http\Controllers\Auth\ForcePasswordChangeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\Guardian\AppointmentController as GuardianAppointmentController;
 use App\Http\Controllers\Guardian\BookingController;
@@ -28,9 +27,6 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-
-    Route::get('/password/force-change', [ForcePasswordChangeController::class, 'show'])->name('password.force-change');
-    Route::put('/password/force-change', [ForcePasswordChangeController::class, 'update'])->name('password.force-change.update');
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::get('/notifications/unread-count', [NotificationController::class, 'unreadCount'])->name('notifications.unread-count');

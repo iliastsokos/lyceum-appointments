@@ -305,7 +305,6 @@ class ExcelImportService
                         'subject' => $row['data']['subject'],
                         'password' => Hash::make($temporaryPassword),
                         'status' => UserStatus::Active,
-                        'must_change_password' => true,
                     ]);
                 });
 
@@ -374,7 +373,6 @@ class ExcelImportService
                         'email' => $email,
                         'password' => Hash::make($temporaryPassword),
                         'status' => UserStatus::Active,
-                        'must_change_password' => true,
                     ]);
 
                     foreach ($rowsForGuardian as $row) {

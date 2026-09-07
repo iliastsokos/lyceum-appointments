@@ -40,7 +40,6 @@ class SetupAdminController extends Controller
             'password' => Hash::make($validated['password']),
             'role' => UserRole::Admin,
             'status' => UserStatus::Active,
-            'must_change_password' => false,
         ]);
 
         Auth::login($admin);

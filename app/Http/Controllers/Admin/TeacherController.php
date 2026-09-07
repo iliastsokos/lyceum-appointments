@@ -55,7 +55,6 @@ class TeacherController extends Controller
             'role' => UserRole::Teacher,
             'status' => UserStatus::Active,
             'password' => Hash::make($temporaryPassword),
-            'must_change_password' => true,
         ]);
 
         return redirect()->route('admin.teachers.index')
@@ -101,7 +100,6 @@ class TeacherController extends Controller
 
         $teacher->forceFill([
             'password' => Hash::make($temporaryPassword),
-            'must_change_password' => true,
         ])->save();
 
         return redirect()->route('admin.teachers.index')

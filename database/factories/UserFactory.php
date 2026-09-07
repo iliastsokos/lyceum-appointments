@@ -36,7 +36,6 @@ class UserFactory extends Factory
             'phone' => null,
             'subject' => null,
             'status' => UserStatus::Active,
-            'must_change_password' => false,
             'remember_token' => Str::random(10),
         ];
     }
@@ -79,13 +78,6 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'status' => UserStatus::Inactive,
-        ]);
-    }
-
-    public function mustChangePassword(): static
-    {
-        return $this->state(fn (array $attributes) => [
-            'must_change_password' => true,
         ]);
     }
 }

@@ -65,7 +65,6 @@ class TeacherImportTest extends TestCase
         $teacher = User::where('email', 'maria@example.gr')->firstOrFail();
         $this->assertSame(UserRole::Teacher, $teacher->role);
         $this->assertSame('Mathematics', $teacher->subject);
-        $this->assertTrue($teacher->must_change_password);
 
         $batch = ImportBatch::firstOrFail();
         $this->assertSame(1, $batch->total_rows);

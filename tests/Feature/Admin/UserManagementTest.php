@@ -31,7 +31,6 @@ class UserManagementTest extends TestCase
 
         $teacher = User::where('email', 'maria@example.gr')->firstOrFail();
         $this->assertSame(UserRole::Teacher, $teacher->role);
-        $this->assertTrue($teacher->must_change_password);
         $this->assertTrue(Hash::check(session('temporaryPassword'), $teacher->password));
     }
 
@@ -50,7 +49,6 @@ class UserManagementTest extends TestCase
 
         $guardian = User::where('email', 'gpap@example.gr')->firstOrFail();
         $this->assertSame(UserRole::Guardian, $guardian->role);
-        $this->assertTrue($guardian->must_change_password);
     }
 
     public function test_admin_cannot_create_teacher_with_invalid_role_via_duplicate_email(): void
@@ -254,7 +252,7 @@ class UserManagementTest extends TestCase
     public function test_admin_can_reset_a_teachers_password(): void
     {
         $admin = User::factory()->admin()->create();
-        $teacher = User::factory()->teacher()->create(['must_change_password' => false]);
+        $teacher = User::factory()->teacher()->create();
         $originalPassword = $teacher->password;
 
         $response = $this->actingAs($admin)->patch(route('admin.teachers.reset-password', $teacher));
@@ -264,7 +262,6 @@ class UserManagementTest extends TestCase
 
         $teacher->refresh();
         $this->assertNotSame($originalPassword, $teacher->password);
-        $this->assertTrue($teacher->must_change_password);
         $this->assertTrue(Hash::check(session('temporaryPassword'), $teacher->password));
     }
 
@@ -281,7 +278,7 @@ class UserManagementTest extends TestCase
     public function test_admin_can_reset_a_guardians_password(): void
     {
         $admin = User::factory()->admin()->create();
-        $guardian = User::factory()->guardian()->create(['must_change_password' => false]);
+        $guardian = User::factory()->guardian()->create();
         $originalPassword = $guardian->password;
 
         $response = $this->actingAs($admin)->patch(route('admin.guardians.reset-password', $guardian));
@@ -291,7 +288,6 @@ class UserManagementTest extends TestCase
 
         $guardian->refresh();
         $this->assertNotSame($originalPassword, $guardian->password);
-        $this->assertTrue($guardian->must_change_password);
         $this->assertTrue(Hash::check(session('temporaryPassword'), $guardian->password));
     }
 

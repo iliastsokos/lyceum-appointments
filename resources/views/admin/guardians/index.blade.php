@@ -10,12 +10,12 @@
 
             @if (session('status') === 'guardian-created' && session('temporaryPassword'))
                 <div class="bg-yellow-50 border border-yellow-300 text-yellow-900 rounded-md p-4 text-sm">
-                    {{ __('Ο λογαριασμός κηδεμόνα δημιουργήθηκε. Προσωρινός κωδικός (μοιραστείτε τον με ασφάλεια, δεν θα εμφανιστεί ξανά):') }}
+                    {{ __('Ο λογαριασμός κηδεμόνα δημιουργήθηκε. Κωδικός πρόσβασης (μοιραστείτε τον με ασφάλεια, δεν θα εμφανιστεί ξανά):') }}
                     <span class="font-mono font-semibold">{{ session('temporaryPassword') }}</span>
                 </div>
             @elseif (session('status') === 'guardian-password-reset' && session('temporaryPassword'))
                 <div class="bg-yellow-50 border border-yellow-300 text-yellow-900 rounded-md p-4 text-sm">
-                    {{ __('Ο κωδικός επαναφέρθηκε. Νέος προσωρινός κωδικός (μοιραστείτε τον με ασφάλεια, δεν θα εμφανιστεί ξανά):') }}
+                    {{ __('Ο κωδικός επαναφέρθηκε. Νέος κωδικός πρόσβασης (μοιραστείτε τον με ασφάλεια, δεν θα εμφανιστεί ξανά):') }}
                     <span class="font-mono font-semibold">{{ session('temporaryPassword') }}</span>
                 </div>
             @elseif (session('status'))
@@ -76,7 +76,7 @@
                                             :action="route('admin.guardians.reset-password', $guardian)"
                                             method="PATCH"
                                             :title="__('Επαναφορά κωδικού για αυτόν τον κηδεμόνα;')"
-                                            :message="__('Θα δημιουργηθεί νέος προσωρινός κωδικός και ο τρέχων κωδικός θα πάψει να ισχύει αμέσως. Ο κηδεμόνας θα πρέπει να τον αλλάξει στην επόμενη σύνδεση.')"
+                                            :message="__('Θα δημιουργηθεί νέος κωδικός και ο τρέχων κωδικός θα πάψει να ισχύει αμέσως.')"
                                             :confirm-text="__('Επαναφορά')"
                                             button-class="text-gray-600 hover:text-gray-900"
                                         >{{ __('Επαναφορά Κωδικού') }}</x-confirm-form-button>

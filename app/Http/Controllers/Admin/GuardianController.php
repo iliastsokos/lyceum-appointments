@@ -58,7 +58,6 @@ class GuardianController extends Controller
             'role' => UserRole::Guardian,
             'status' => UserStatus::Active,
             'password' => Hash::make($temporaryPassword),
-            'must_change_password' => true,
         ]);
 
         return redirect()->route('admin.guardians.index')
@@ -148,7 +147,6 @@ class GuardianController extends Controller
 
         $guardian->forceFill([
             'password' => Hash::make($temporaryPassword),
-            'must_change_password' => true,
         ])->save();
 
         return redirect()->route('admin.guardians.index')
