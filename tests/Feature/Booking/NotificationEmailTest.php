@@ -70,6 +70,68 @@ class NotificationEmailTest extends TestCase
         });
     }
 
+    public function test_booking_a_slot_also_sends_the_guardian_a_confirmation_in_app_and_by_email(): void
+    {
+        Notification::fake();
+
+        $teacher = User::factory()->teacher()->create();
+        $guardian = User::factory()->guardian()->create();
+        $child = Child::factory()->for($guardian, 'guardian')->create();
+        $slot = $this->makeSlot($teacher);
+
+        $this->actingAs($guardian)->post(route('guardian.book.store', [
+            'teacher' => $teacher, 'slot' => $slot,
+        ]), ['child_id' => $child->id]);
+
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $guardian->id,
+            'type' => 'appointment_booked',
+            'message' => sprintf(
+                'Κλείσατε ραντεβού με τον/την εκπαιδευτικό %s για τον/την %s στις %s και ώρα %s.',
+                $teacher->full_name,
+                $child->full_name,
+                $slot->date->translatedFormat('d/m/Y'),
+                '11:00',
+            ),
+        ]);
+        Notification::assertSentTo($guardian, NotificationMail::class, function (NotificationMail $notification) {
+            return $notification->toMail($notification)->subject === 'Επιβεβαίωση ραντεβού';
+        });
+    }
+
+    public function test_cancelling_an_appointment_also_sends_the_guardian_a_confirmation_in_app_and_by_email(): void
+    {
+        Notification::fake();
+
+        $teacher = User::factory()->teacher()->create();
+        $guardian = User::factory()->guardian()->create();
+        $child = Child::factory()->for($guardian, 'guardian')->create();
+        $slot = $this->makeSlot($teacher);
+
+        $this->actingAs($guardian)->post(route('guardian.book.store', [
+            'teacher' => $teacher, 'slot' => $slot,
+        ]), ['child_id' => $child->id]);
+
+        $appointment = $guardian->appointmentsAsGuardian()->firstOrFail();
+
+        $this->actingAs($guardian)->patch(route('guardian.appointments.cancel', $appointment));
+
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $guardian->id,
+            'type' => 'appointment_cancelled',
+            'message' => sprintf(
+                'Ακυρώσατε το ραντεβού με τον/την εκπαιδευτικό %s για τον/την %s στις %s και ώρα %s.',
+                $teacher->full_name,
+                $child->full_name,
+                $slot->date->translatedFormat('d/m/Y'),
+                '11:00',
+            ),
+        ]);
+        Notification::assertSentTo($guardian, NotificationMail::class, function (NotificationMail $notification) {
+            return $notification->toMail($notification)->subject === 'Ακύρωση ραντεβού';
+        });
+    }
+
     public function test_a_failed_notification_email_does_not_prevent_the_notification_from_being_recorded(): void
     {
         $teacher = Mockery::mock(User::factory()->create())->makePartial();

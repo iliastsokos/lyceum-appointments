@@ -157,7 +157,6 @@ class TeacherAndAdminCancellationTest extends TestCase
         $appointment->refresh();
         $this->assertSame($appointment->guardian_id, $appointment->cancelled_by);
         $this->assertSame(SlotStatus::Available, $appointment->slot->fresh()->status);
-        $this->assertDatabaseMissing('notifications', ['user_id' => $appointment->guardian_id]);
     }
 
     public function test_cancellation_reason_is_limited_in_length(): void

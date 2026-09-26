@@ -85,13 +85,29 @@ class BookingService
             ),
         );
 
+        // The guardian gets their own confirmation too, so they have the
+        // booking details in their inbox without having to log back in.
+        $this->notifications->send(
+            $guardian,
+            'appointment_booked',
+            'Επιβεβαίωση ραντεβού',
+            sprintf(
+                'Κλείσατε ραντεβού με τον/την εκπαιδευτικό %s για τον/την %s στις %s και ώρα %s.',
+                $appointment->teacher->full_name,
+                $child->full_name,
+                $appointment->date->translatedFormat('d/m/Y'),
+                substr($appointment->start_time, 0, 5),
+            ),
+        );
+
         return $appointment;
     }
 
     /**
      * Cancel an appointment on behalf of $actor — the guardian who booked
      * it, the teacher it was booked with, or an admin acting for the
-     * teacher — and notify the other side(s).
+     * teacher — and notify the other side(s). A guardian cancelling their
+     * own appointment also gets a confirmation of it.
      *
      * A guardian's cancellation frees the slot for other guardians to book.
      * A teacher's (or admin's) cancellation disables it instead: the teacher
@@ -148,6 +164,18 @@ class BookingService
                 'appointment_cancelled',
                 'Ακύρωση ραντεβού',
                 sprintf('Ο κηδεμόνας %s ακύρωσε το ραντεβού %s.', $locked->guardian->full_name, $when).$reasonSuffix,
+            );
+
+            $this->notifications->send(
+                $locked->guardian,
+                'appointment_cancelled',
+                'Ακύρωση ραντεβού',
+                sprintf(
+                    'Ακυρώσατε το ραντεβού με τον/την εκπαιδευτικό %s για τον/την %s %s.',
+                    $locked->teacher->full_name,
+                    $locked->child->full_name,
+                    $when,
+                ),
             );
         } elseif ($byTeacher) {
             $this->notifications->send(
