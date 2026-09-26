@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AppointmentController as AdminAppointmentController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\GuardianController as AdminGuardianController;
 use App\Http\Controllers\Admin\ImportController;
@@ -56,10 +57,14 @@ Route::middleware(['auth', 'role:teacher'])->prefix('teacher')->name('teacher.')
     Route::patch('/availability/slots/{slot}/toggle', [AvailabilityController::class, 'toggleSlot'])->name('availability.slots.toggle');
 
     Route::get('/appointments', [TeacherAppointmentController::class, 'index'])->name('appointments.index');
+    Route::patch('/appointments/{appointment}/cancel', [TeacherAppointmentController::class, 'cancel'])->name('appointments.cancel');
 });
 
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
+
+    Route::get('/appointments', [AdminAppointmentController::class, 'index'])->name('appointments.index');
+    Route::patch('/appointments/{appointment}/cancel', [AdminAppointmentController::class, 'cancel'])->name('appointments.cancel');
 
     Route::get('/teachers', [AdminTeacherController::class, 'index'])->name('teachers.index');
     Route::get('/teachers/create', [AdminTeacherController::class, 'create'])->name('teachers.create');

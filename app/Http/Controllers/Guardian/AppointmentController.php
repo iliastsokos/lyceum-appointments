@@ -35,8 +35,9 @@ class AppointmentController extends Controller
     public function cancel(Request $request, Appointment $appointment): RedirectResponse
     {
         $this->authorize('cancel', $appointment);
+        $request->validate(['reason' => ['nullable', 'string', 'max:500']]);
 
-        $reason = $request->string('reason')->toString() ?: null;
+        $reason = $request->string('reason')->trim()->toString() ?: null;
 
         try {
             $this->bookingService->cancel($appointment, $request->user(), $reason);

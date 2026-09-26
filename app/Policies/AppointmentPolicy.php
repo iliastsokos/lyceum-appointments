@@ -14,8 +14,14 @@ class AppointmentPolicy
             || $appointment->teacher_id === $user->id;
     }
 
+    /**
+     * The guardian who booked it, the teacher it was booked with, or an
+     * admin acting on the teacher's behalf.
+     */
     public function cancel(User $user, Appointment $appointment): bool
     {
-        return $appointment->guardian_id === $user->id;
+        return $user->isAdmin()
+            || $appointment->guardian_id === $user->id
+            || $appointment->teacher_id === $user->id;
     }
 }

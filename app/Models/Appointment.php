@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['slot_id', 'active_slot_id', 'teacher_id', 'guardian_id', 'child_id', 'status', 'date', 'start_time', 'end_time', 'booked_at', 'cancelled_at', 'cancellation_reason'])]
+#[Fillable(['slot_id', 'active_slot_id', 'teacher_id', 'guardian_id', 'child_id', 'status', 'date', 'start_time', 'end_time', 'booked_at', 'cancelled_at', 'cancelled_by', 'cancellation_reason'])]
 class Appointment extends Model
 {
     /** @use HasFactory<AppointmentFactory> */
@@ -59,5 +59,32 @@ class Appointment extends Model
     public function child(): BelongsTo
     {
         return $this->belongsTo(Child::class, 'child_id');
+    }
+
+    /**
+     * @return BelongsTo<User, $this>
+     */
+    public function cancelledBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'cancelled_by');
+    }
+
+    /**
+     * Who cancelled this appointment, worded for "Ακυρώθηκε από …" in the
+     * appointment lists, or null if it isn't cancelled or the canceller is
+     * unknown (cancelled before cancelled_by existed, or that user has since
+     * been deleted).
+     */
+    public function cancelledByLabel(): ?string
+    {
+        if ($this->status !== AppointmentStatus::Cancelled || $this->cancelled_by === null) {
+            return null;
+        }
+
+        return match ($this->cancelled_by) {
+            $this->guardian_id => 'τον κηδεμόνα',
+            $this->teacher_id => 'τον/την εκπαιδευτικό',
+            default => 'τη Διεύθυνση',
+        };
     }
 }

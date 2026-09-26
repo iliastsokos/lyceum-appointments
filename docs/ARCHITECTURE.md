@@ -124,7 +124,7 @@ Full column-level migrations are written in Phase 2 (users/children/teachers) an
 ## 3. Authorization strategy
 
 - Route groups per role prefix (`/admin/*`, `/teacher/*`, `/guardian/*`), each behind an `EnsureUserHasRole` middleware — **never** relying on hidden UI alone (spec §4).
-- Laravel **Policies** for object-level checks that middleware can't express: a guardian may only view/cancel *their own* appointments and *their own* children; a teacher may only manage *their own* availability and see appointments booked with *them*. Every controller action authorizes via `$this->authorize()` / policy, so even a guessed URL/ID (IDOR) is rejected server-side.
+- Laravel **Policies** for object-level checks that middleware can't express: a guardian may only view/cancel *their own* appointments and *their own* children; a teacher may only manage *their own* availability and see/cancel appointments booked with *them*; an admin may cancel any appointment on a teacher's behalf. Who cancelled is recorded in `appointments.cancelled_by` and drives both the notification (the other side is told, in-app + email) and the slot outcome (a guardian's cancellation reopens the slot; a teacher/admin cancellation disables it so it can't be silently rebooked). Every controller action authorizes via `$this->authorize()` / policy, so even a guessed URL/ID (IDOR) is rejected server-side.
 - Admin accounts are seeded via an Artisan command (`app:create-admin`, Phase 2) — never exposed on the public registration route (spec §7, §41).
 
 ## 4. Booking concurrency strategy (critical requirement)

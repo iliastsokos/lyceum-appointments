@@ -65,6 +65,7 @@
                                     </td>
                                     <td class="py-3 pr-4 text-right space-x-3">
                                         <a href="{{ route('admin.teachers.availability.index', $teacher) }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Διαθεσιμότητα') }}</a>
+                                        <a href="{{ route('admin.appointments.index', ['teacher_id' => $teacher->id]) }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Ραντεβού') }}</a>
                                         <a href="{{ route('admin.teachers.edit', $teacher) }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Επεξεργασία') }}</a>
                                         <form method="POST" action="{{ route('admin.teachers.toggle-status', $teacher) }}" class="inline">
                                             @csrf

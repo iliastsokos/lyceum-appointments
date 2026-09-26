@@ -62,6 +62,7 @@
                                 {{ \Illuminate\Support\Carbon::parse($appointment->date)->translatedFormat('d/m/Y') }}
                                 &middot; {{ substr($appointment->start_time, 0, 5) }}
                                 &middot; {{ $appointment->guardian->full_name }} &middot; {{ $appointment->child->full_name }}
+                                <x-cancellation-info :appointment="$appointment" class="mt-0.5" />
                             </div>
                         @endforeach
                     </div>

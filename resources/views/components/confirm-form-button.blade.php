@@ -4,6 +4,7 @@
     'title',
     'message',
     'confirmText' => __('Επιβεβαίωση'),
+    'dismissText' => __('Ακύρωση'),
     'buttonClass' => 'text-sm text-red-600 hover:text-red-900',
     'confirmButtonClass' => 'inline-flex items-center justify-center px-6 py-3 bg-red-600 border border-transparent rounded-xl font-semibold text-base text-white hover:bg-red-500 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2',
 ])
@@ -42,18 +43,25 @@
                 <h3 id="{{ $dialogId }}-title" class="text-lg font-semibold text-ink">{{ $title }}</h3>
                 <p class="mt-2 text-base text-body">{{ $message }}</p>
 
-                <div class="mt-6 flex items-center justify-end gap-4">
-                    <button type="button" x-ref="cancelBtn" x-on:click="open = false" class="text-base font-medium text-body hover:text-ink">
-                        {{ __('Ακύρωση') }}
-                    </button>
-                    <form method="POST" action="{{ $action }}">
-                        @csrf
-                        @if (strtoupper($method) !== 'POST')
-                            @method($method)
-                        @endif
+                {{-- Optional extra inputs (e.g. a cancellation reason) are
+                     rendered inside the form so they're submitted with it. --}}
+                <form method="POST" action="{{ $action }}">
+                    @csrf
+                    @if (strtoupper($method) !== 'POST')
+                        @method($method)
+                    @endif
+
+                    @isset($fields)
+                        <div class="mt-4">{{ $fields }}</div>
+                    @endisset
+
+                    <div class="mt-6 flex items-center justify-end gap-4">
+                        <button type="button" x-ref="cancelBtn" x-on:click="open = false" class="text-base font-medium text-body hover:text-ink">
+                            {{ $dismissText }}
+                        </button>
                         <button type="submit" class="{{ $confirmButtonClass }}">{{ $confirmText }}</button>
-                    </form>
-                </div>
+                    </div>
+                </form>
             </div>
         </div>
     </div>

@@ -81,16 +81,14 @@
                                     &middot; {{ substr($appointment->start_time, 0, 5) }}–{{ substr($appointment->end_time, 0, 5) }}
                                 </div>
                                 <div class="mt-1 text-xs text-gray-400">{{ __('Κλείστηκε') }}: {{ $appointment->booked_at->format('d/m/Y H:i') }}</div>
+                                <x-cancellation-info :appointment="$appointment" class="mt-1" />
 
                                 @if ($appointment->status->value === 'new')
                                     <div class="mt-3">
-                                        <x-confirm-form-button
+                                        <x-cancel-appointment-button
                                             :action="route('guardian.appointments.cancel', $appointment)"
-                                            method="PATCH"
-                                            :title="__('Ακύρωση αυτού του ραντεβού;')"
                                             :message="__('Ο εκπαιδευτικός θα ειδοποιηθεί και αυτή η ώρα θα γίνει ξανά διαθέσιμη σε άλλους κηδεμόνες.')"
-                                            :confirm-text="__('Ακύρωση Ραντεβού')"
-                                        >{{ __('Ακύρωση Ραντεβού') }}</x-confirm-form-button>
+                                        />
                                     </div>
                                 @endif
                             </div>

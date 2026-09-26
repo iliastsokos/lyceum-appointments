@@ -89,17 +89,28 @@ class BookingService
     }
 
     /**
-     * Cancel a guardian's own appointment and free the slot for rebooking.
+     * Cancel an appointment on behalf of $actor — the guardian who booked
+     * it, the teacher it was booked with, or an admin acting for the
+     * teacher — and notify the other side(s).
+     *
+     * A guardian's cancellation frees the slot for other guardians to book.
+     * A teacher's (or admin's) cancellation disables it instead: the teacher
+     * is the one who can't make that time, so it must not silently reopen
+     * to someone else. They can re-enable it from the slot grid if they want.
      *
      * @throws ValidationException
      */
-    public function cancel(Appointment $appointment, User $guardian, ?string $reason = null): Appointment
+    public function cancel(Appointment $appointment, User $actor, ?string $reason = null): Appointment
     {
-        if ($appointment->guardian_id !== $guardian->id) {
+        $byGuardian = $appointment->guardian_id === $actor->id;
+        $byTeacher = $appointment->teacher_id === $actor->id;
+        $byAdmin = $actor->isAdmin();
+
+        if (! $byGuardian && ! $byTeacher && ! $byAdmin) {
             throw ValidationException::withMessages(['appointment' => 'Μπορείτε να ακυρώσετε μόνο τα δικά σας ραντεβού.']);
         }
 
-        $locked = $this->runInTransactionWithLockRetry(function () use ($appointment, $reason) {
+        $locked = $this->runInTransactionWithLockRetry(function () use ($appointment, $actor, $reason, $byGuardian) {
             $locked = Appointment::where('id', $appointment->id)->lockForUpdate()->firstOrFail();
 
             if ($locked->status === AppointmentStatus::Cancelled) {
@@ -110,13 +121,14 @@ class BookingService
                 'status' => AppointmentStatus::Cancelled,
                 'active_slot_id' => null,
                 'cancelled_at' => now(),
+                'cancelled_by' => $actor->id,
                 'cancellation_reason' => $reason,
             ]);
 
             $slot = AppointmentSlot::where('id', $locked->slot_id)->lockForUpdate()->first();
 
             if ($slot && $slot->status === SlotStatus::Booked) {
-                $slot->update(['status' => SlotStatus::Available]);
+                $slot->update(['status' => $byGuardian ? SlotStatus::Available : SlotStatus::Disabled]);
             }
 
             return $locked;
@@ -127,17 +139,53 @@ class BookingService
         // open. $locked->date/start_time are its own denormalized columns
         // (survive even if the slot is later deleted), so no slot lookup is
         // needed here at all any more.
-        $this->notifications->send(
-            $locked->teacher,
-            'appointment_cancelled',
-            'Ακύρωση ραντεβού',
-            sprintf(
-                'Ο κηδεμόνας %s ακύρωσε το ραντεβού στις %s και ώρα %s.',
-                $locked->guardian->full_name,
-                $locked->date->translatedFormat('d/m/Y'),
-                substr($locked->start_time, 0, 5),
-            ),
-        );
+        $when = sprintf('στις %s και ώρα %s', $locked->date->translatedFormat('d/m/Y'), substr($locked->start_time, 0, 5));
+        $reasonSuffix = $reason !== null ? " Αιτιολογία: {$reason}" : '';
+
+        if ($byGuardian) {
+            $this->notifications->send(
+                $locked->teacher,
+                'appointment_cancelled',
+                'Ακύρωση ραντεβού',
+                sprintf('Ο κηδεμόνας %s ακύρωσε το ραντεβού %s.', $locked->guardian->full_name, $when).$reasonSuffix,
+            );
+        } elseif ($byTeacher) {
+            $this->notifications->send(
+                $locked->guardian,
+                'appointment_cancelled',
+                'Ακύρωση ραντεβού',
+                sprintf(
+                    'Ο/Η εκπαιδευτικός %s ακύρωσε το ραντεβού σας για τον/την %s %s.',
+                    $locked->teacher->full_name,
+                    $locked->child->full_name,
+                    $when,
+                ).$reasonSuffix,
+            );
+        } else {
+            $this->notifications->send(
+                $locked->guardian,
+                'appointment_cancelled',
+                'Ακύρωση ραντεβού',
+                sprintf(
+                    'Η Διεύθυνση του σχολείου ακύρωσε το ραντεβού σας με τον/την εκπαιδευτικό %s για τον/την %s %s.',
+                    $locked->teacher->full_name,
+                    $locked->child->full_name,
+                    $when,
+                ).$reasonSuffix,
+            );
+
+            $this->notifications->send(
+                $locked->teacher,
+                'appointment_cancelled',
+                'Ακύρωση ραντεβού',
+                sprintf(
+                    'Η Διεύθυνση του σχολείου ακύρωσε το ραντεβού σας με τον κηδεμόνα %s (μαθητής/-τρια %s) %s.',
+                    $locked->guardian->full_name,
+                    $locked->child->full_name,
+                    $when,
+                ).$reasonSuffix,
+            );
+        }
 
         return $locked;
     }
