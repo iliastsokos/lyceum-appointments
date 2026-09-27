@@ -42,7 +42,7 @@
 
             <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg p-6">
                 <h3 class="text-lg font-medium text-gray-900">{{ __('Συντήρηση Συστήματος') }}</h3>
-                <p class="mt-1 text-sm text-gray-600">{{ __('Χρησιμοποιήστε αυτό μετά από κάθε ενημέρωση της εφαρμογής, ώστε τυχόν αλλαγές στη βάση δεδομένων να εφαρμοστούν — απαραίτητο ειδικά όταν δεν υπάρχει πρόσβαση μέσω SSH/Scheduled Tasks.') }}</p>
+                <p class="mt-1 text-sm text-gray-600">{{ __('Χρησιμοποιήστε αυτό μετά από κάθε ενημέρωση της εφαρμογής, ώστε τυχόν αλλαγές στη βάση δεδομένων να εφαρμοστούν και να καθαριστούν οι προσωρινές μνήμες (cache) — απαραίτητο ειδικά όταν δεν υπάρχει πρόσβαση μέσω SSH/Scheduled Tasks.') }}</p>
                 <div class="mt-4">
                     <x-confirm-form-button
                         :action="route('admin.system.migrate')"
