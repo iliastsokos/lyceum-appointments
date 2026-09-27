@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-        <meta name="description" content="Ηλεκτρονική πλατφόρμα κλεισίματος ραντεβού γονέων – εκπαιδευτικών του 1ου ΓΕΛ Ραφήνας.">
+        <meta name="description" content="Ηλεκτρονική πλατφόρμα προγραμματισμού επικοινωνίας κηδεμόνων – εκπαιδευτικών του 1ου ΓΕΛ Ραφήνας.">
 
         <title>{{ config('app.name') }} &middot; 1ο ΓΕΛ Ραφήνας</title>
 
@@ -24,7 +24,7 @@
             <h1 class="mt-6 text-2xl sm:text-3xl font-bold text-ink">Σύστημα Ραντεβού</h1>
 
             <p class="mt-3 w-full max-w-sm text-base text-body leading-relaxed">
-                Ηλεκτρονική πλατφόρμα κλεισίματος ραντεβού ανάμεσα σε κηδεμόνες και εκπαιδευτικούς του σχολείου. Οι κωδικοί πρόσβασης δίνονται από τη Διεύθυνση.
+                Ηλεκτρονική πλατφόρμα προγραμματισμού επικοινωνίας ανάμεσα σε κηδεμόνες και εκπαιδευτικούς του σχολείου. Οι κωδικοί πρόσβασης δίνονται από τη Διεύθυνση.
             </p>
 
             <a href="{{ route('login') }}" class="mt-8 inline-flex items-center justify-center w-full max-w-xs px-6 py-3.5 bg-secondary rounded-xl font-semibold text-base text-white shadow-sm hover:bg-secondary-hover focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2 transition">
