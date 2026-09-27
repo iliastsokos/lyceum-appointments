@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Teacher;
 
 use App\Enums\AppointmentStatus;
 use App\Http\Controllers\Controller;
+use App\Models\Appointment;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -11,6 +12,8 @@ class DashboardController extends Controller
 {
     public function index(Request $request): View
     {
+        Appointment::completePast();
+
         $teacher = $request->user();
 
         $todaysAppointments = $teacher->appointmentsAsTeacher()

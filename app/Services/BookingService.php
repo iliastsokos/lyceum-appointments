@@ -133,6 +133,10 @@ class BookingService
                 throw ValidationException::withMessages(['appointment' => 'Αυτό το ραντεβού έχει ήδη ακυρωθεί.']);
             }
 
+            if (! $locked->isCancellable()) {
+                throw ValidationException::withMessages(['appointment' => 'Αυτό το ραντεβού έχει ήδη ξεκινήσει ή ολοκληρωθεί και δεν μπορεί να ακυρωθεί.']);
+            }
+
             $locked->update([
                 'status' => AppointmentStatus::Cancelled,
                 'active_slot_id' => null,

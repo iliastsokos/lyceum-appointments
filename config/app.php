@@ -65,7 +65,10 @@ return [
     |
     */
 
-    'timezone' => env('APP_TIMEZONE', 'UTC'),
+    // Europe/Athens even when APP_TIMEZONE is missing from .env: slot times
+    // are entered and shown as Greek local time, so "has this appointment
+    // passed yet" is only right if now() is Greek local time too.
+    'timezone' => env('APP_TIMEZONE', 'Europe/Athens'),
 
     /*
     |--------------------------------------------------------------------------

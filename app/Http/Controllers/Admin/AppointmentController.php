@@ -18,13 +18,14 @@ class AppointmentController extends Controller
 
     public function index(Request $request): View
     {
+        Appointment::completePast();
+
         $appointments = Appointment::query()
             ->with(['teacher', 'guardian', 'child'])
             ->when($request->filled('teacher_id'), fn ($q) => $q->where('teacher_id', $request->integer('teacher_id')))
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
             ->when($request->filled('date'), fn ($q) => $q->where('date', $request->string('date')))
-            ->orderBy('date')
-            ->orderBy('start_time')
+            ->upcomingFirst()
             ->paginate(50)
             ->withQueryString();
 

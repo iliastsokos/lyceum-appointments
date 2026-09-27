@@ -74,7 +74,7 @@
                                         <x-cancellation-info :appointment="$appointment" class="mt-1" />
                                     </td>
                                     <td class="py-3 pr-4 text-right">
-                                        @if ($appointment->status->value === 'new')
+                                        @if ($appointment->isCancellable())
                                             <x-cancel-appointment-button
                                                 :action="route('teacher.appointments.cancel', $appointment)"
                                                 :message="__('Ο κηδεμόνας θα ειδοποιηθεί στην εφαρμογή και με email. Η ώρα θα απενεργοποιηθεί, ώστε να μην την κλείσει άλλος κηδεμόνας.')"

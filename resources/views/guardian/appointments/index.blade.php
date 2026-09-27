@@ -83,7 +83,7 @@
                                 <div class="mt-1 text-xs text-gray-400">{{ __('Κλείστηκε') }}: {{ $appointment->booked_at->format('d/m/Y H:i') }}</div>
                                 <x-cancellation-info :appointment="$appointment" class="mt-1" />
 
-                                @if ($appointment->status->value === 'new')
+                                @if ($appointment->isCancellable())
                                     <div class="mt-3">
                                         <x-cancel-appointment-button
                                             :action="route('guardian.appointments.cancel', $appointment)"

@@ -3,11 +3,15 @@
 namespace App\Models;
 
 use App\Enums\AppointmentStatus;
+use Carbon\Carbon;
 use Database\Factories\AppointmentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 #[Fillable(['slot_id', 'active_slot_id', 'teacher_id', 'guardian_id', 'child_id', 'status', 'date', 'start_time', 'end_time', 'booked_at', 'cancelled_at', 'cancelled_by', 'cancellation_reason'])]
 class Appointment extends Model
@@ -27,6 +31,62 @@ class Appointment extends Model
             'booked_at' => 'datetime',
             'cancelled_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Mark every still-"new" appointment whose end time has passed as
+     * completed. Nothing else ever sets Completed, and there's no cron on
+     * the hosts this runs on, so this is called lazily at the top of every
+     * page that lists appointments — a single cheap UPDATE that is a no-op
+     * almost every time. A failure (e.g. a momentary SQLite lock) is logged
+     * and ignored: the next page load simply catches up.
+     */
+    public static function completePast(): void
+    {
+        try {
+            static::query()
+                ->where('status', AppointmentStatus::New)
+                ->where(fn (Builder $q) => $q
+                    ->where('date', '<', today()->toDateString())
+                    ->orWhere(fn (Builder $q) => $q
+                        ->where('date', today()->toDateString())
+                        ->where('end_time', '<=', now()->format('H:i:s'))))
+                ->update(['status' => AppointmentStatus::Completed, 'active_slot_id' => null]);
+        } catch (Throwable $e) {
+            Log::warning('Could not mark past appointments as completed.', ['exception' => $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Upcoming appointments first (today included), soonest first; then
+     * past ones, most recent first — so the list opens on what's next
+     * instead of on the oldest history.
+     *
+     * @param  Builder<Appointment>  $query
+     */
+    public function scopeUpcomingFirst(Builder $query): void
+    {
+        $today = today()->toDateString();
+
+        $query
+            ->orderByRaw('CASE WHEN date >= ? THEN 0 ELSE 1 END', [$today])
+            ->orderByRaw('CASE WHEN date >= ? THEN date END ASC', [$today])
+            ->orderByRaw('CASE WHEN date >= ? THEN start_time END ASC', [$today])
+            ->orderByRaw('CASE WHEN date < ? THEN date END DESC', [$today])
+            ->orderByRaw('CASE WHEN date < ? THEN start_time END DESC', [$today]);
+    }
+
+    public function startsAt(): Carbon
+    {
+        return Carbon::parse("{$this->date->toDateString()} {$this->start_time}");
+    }
+
+    /**
+     * Whether it can still be cancelled: still "new" and not yet started.
+     */
+    public function isCancellable(): bool
+    {
+        return $this->status === AppointmentStatus::New && $this->startsAt()->isFuture();
     }
 
     /**
