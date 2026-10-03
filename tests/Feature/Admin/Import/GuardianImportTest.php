@@ -3,6 +3,7 @@
 namespace Tests\Feature\Admin\Import;
 
 use App\Enums\UserRole;
+use App\Models\Appointment;
 use App\Models\ImportBatch;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -105,15 +106,16 @@ class GuardianImportTest extends TestCase
         $this->assertSame(0, $batch->skipped_rows);
     }
 
-    public function test_existing_guardians_children_are_matched_or_added_never_removed(): void
+    public function test_existing_guardians_children_are_matched_updated_or_added(): void
     {
         $admin = User::factory()->admin()->create();
         $existingGuardian = User::factory()->guardian()->create(['email' => 'gpap@example.gr']);
         $existingGuardian->children()->create(['first_name' => 'Maria', 'last_name' => 'Papadopoulou', 'class' => 'A1']);
-        $existingGuardian->children()->create(['first_name' => 'Untouched', 'last_name' => 'Child', 'class' => 'G1']);
+        $existingGuardian->children()->create(['first_name' => 'Nolongerlisted', 'last_name' => 'Child', 'class' => 'G1']);
 
-        // Re-upload with an updated class for the matched child and one brand-new child.
-        // The untouched child (not in the file) must survive.
+        // Re-upload with an updated class for the matched child, one
+        // brand-new child, and no mention of "Nolongerlisted" — it has no
+        // appointment, so it must be removed to match the file exactly.
         $file = $this->makeXlsxUpload($this->headers, [
             ['Giorgos', 'Papadopoulos', 'gpap@example.gr', 'Maria', 'Papadopoulou', 'B1'],
             ['Giorgos', 'Papadopoulos', 'gpap@example.gr', 'Nikos', 'Papadopoulos', 'G2'],
@@ -123,10 +125,51 @@ class GuardianImportTest extends TestCase
         $token = $preview->viewData('token');
         $this->actingAs($admin)->post(route('admin.imports.commit', 'guardians'), ['token' => $token]);
 
-        $this->assertSame(3, $existingGuardian->children()->count());
+        $this->assertSame(2, $existingGuardian->children()->count());
         $this->assertSame('B1', $existingGuardian->children()->where('first_name', 'Maria')->firstOrFail()->class);
         $this->assertTrue($existingGuardian->children()->where('first_name', 'Nikos')->exists());
-        $this->assertTrue($existingGuardian->children()->where('first_name', 'Untouched')->exists());
+        $this->assertFalse($existingGuardian->children()->where('first_name', 'Nolongerlisted')->exists());
+    }
+
+    public function test_a_child_no_longer_in_the_file_is_kept_if_it_already_has_an_appointment(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $existingGuardian = User::factory()->guardian()->create(['email' => 'gpap@example.gr']);
+        $childWithAppointment = $existingGuardian->children()->create(['first_name' => 'Hasappointment', 'last_name' => 'Child', 'class' => 'G1']);
+        Appointment::factory()->create(['guardian_id' => $existingGuardian->id, 'child_id' => $childWithAppointment->id]);
+
+        // The file no longer lists "Hasappointment" at all.
+        $file = $this->makeXlsxUpload($this->headers, [
+            ['Giorgos', 'Papadopoulos', 'gpap@example.gr', 'Maria', 'Papadopoulou', 'B1'],
+        ]);
+
+        $preview = $this->actingAs($admin)->post(route('admin.imports.preview', 'guardians'), ['file' => $file]);
+        $token = $preview->viewData('token');
+        $this->actingAs($admin)->post(route('admin.imports.commit', 'guardians'), ['token' => $token]);
+
+        $this->assertTrue($existingGuardian->children()->where('first_name', 'Hasappointment')->exists());
+        $this->assertTrue($existingGuardian->children()->where('first_name', 'Maria')->exists());
+    }
+
+    public function test_reuploading_the_same_greek_named_child_does_not_create_a_duplicate(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $existingGuardian = User::factory()->guardian()->create(['email' => 'gpap@example.gr']);
+        $existingGuardian->children()->create(['first_name' => 'Μαρία', 'last_name' => 'Παπαδοπούλου', 'class' => 'B1']);
+
+        // Re-uploading the exact same guardian/child must recognize the
+        // existing Greek-named child rather than creating a duplicate —
+        // SQLite's LOWER() doesn't fold Greek case, so matching has to be
+        // done without relying on it.
+        $file = $this->makeXlsxUpload($this->headers, [
+            ['Γιώργος', 'Παπαδόπουλος', 'gpap@example.gr', 'Μαρία', 'Παπαδοπούλου', 'B1'],
+        ]);
+
+        $preview = $this->actingAs($admin)->post(route('admin.imports.preview', 'guardians'), ['file' => $file]);
+        $token = $preview->viewData('token');
+        $this->actingAs($admin)->post(route('admin.imports.commit', 'guardians'), ['token' => $token]);
+
+        $this->assertSame(1, $existingGuardian->children()->count());
     }
 
     public function test_guardian_password_column_sets_the_password_for_a_new_guardian(): void

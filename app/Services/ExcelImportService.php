@@ -434,11 +434,19 @@ class ExcelImportService
 
     /**
      * Updates an existing guardian's name (and password, if one was
-     * provided in the file) and reconciles their children: a child whose
-     * first/last name already exists under this guardian has its class
-     * updated in place, a child not found is added — existing children
-     * absent from the file are never removed (they may have appointment
-     * history that a hard delete would be blocked on anyway).
+     * provided in the file) and fully syncs their children to the file: a
+     * child whose first/last name already exists under this guardian has
+     * its class updated in place, a child not found is added, and an
+     * existing child no longer present in the file is removed — unless it
+     * already has an appointment, in which case it's left alone (an
+     * appointment's child can't be hard-deleted anyway, and shouldn't be:
+     * that's real history, not a stale row).
+     *
+     * Matching is done in PHP with mb_strtolower(), not a SQL LOWER()
+     * comparison: SQLite's built-in LOWER() only folds ASCII, so it leaves
+     * Greek names' case untouched and would never match — which is exactly
+     * what caused re-uploads to silently create duplicate children instead
+     * of recognizing the ones already on file.
      *
      * @param  Collection<int, array>  $rowsForGuardian
      * @return array{email: string, password: string}|null null when no
@@ -464,20 +472,32 @@ class ExcelImportService
 
             $guardian->update($updates);
 
-            foreach ($rowsForGuardian as $row) {
-                $child = $guardian->children()
-                    ->whereRaw('LOWER(first_name) = ?', [Str::lower($row['data']['childFirstName'])])
-                    ->whereRaw('LOWER(last_name) = ?', [Str::lower($row['data']['childLastName'])])
-                    ->first();
+            $existingChildren = $guardian->children()->withCount('appointments')->get();
+            $matchedChildIds = [];
 
-                if ($child) {
-                    $child->update(['class' => $row['data']['childClass']]);
+            foreach ($rowsForGuardian as $row) {
+                $match = $existingChildren->first(
+                    fn ($child) => ! in_array($child->id, $matchedChildIds, true)
+                        && Str::lower($child->first_name) === Str::lower($row['data']['childFirstName'])
+                        && Str::lower($child->last_name) === Str::lower($row['data']['childLastName'])
+                );
+
+                if ($match) {
+                    $match->update(['class' => $row['data']['childClass']]);
+                    $matchedChildIds[] = $match->id;
                 } else {
-                    $guardian->children()->create([
+                    $created = $guardian->children()->create([
                         'first_name' => $row['data']['childFirstName'],
                         'last_name' => $row['data']['childLastName'],
                         'class' => $row['data']['childClass'],
                     ]);
+                    $matchedChildIds[] = $created->id;
+                }
+            }
+
+            foreach ($existingChildren as $child) {
+                if (! in_array($child->id, $matchedChildIds, true) && $child->appointments_count === 0) {
+                    $child->delete();
                 }
             }
         });
