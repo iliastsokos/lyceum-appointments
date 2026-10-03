@@ -4,7 +4,10 @@ namespace Tests\Feature;
 
 use App\Models\Notification;
 use App\Models\User;
+use App\Services\NotificationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class NotificationTest extends TestCase
@@ -90,5 +93,16 @@ class NotificationTest extends TestCase
         $response = $this->actingAs($teacher)->get(route('teacher.dashboard'));
 
         $response->assertSee('count: 3', false);
+    }
+
+    public function test_notification_is_timestamped_in_the_application_timezone(): void
+    {
+        $this->travelTo(Carbon::parse('2026-10-03 17:49:00', 'Europe/Athens'));
+
+        $teacher = User::factory()->teacher()->create();
+        app(NotificationService::class)->send($teacher, 'appointment_booked', 'Νέο ραντεβού', 'msg');
+
+        $stored = DB::table('notifications')->where('user_id', $teacher->id)->value('created_at');
+        $this->assertSame(now()->format('Y-m-d H:i:s'), $stored);
     }
 }
