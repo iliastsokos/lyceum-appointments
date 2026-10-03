@@ -7,6 +7,7 @@ use App\Models\ImportBatch;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Tests\Support\BuildsTestSpreadsheets;
 use Tests\TestCase;
@@ -89,10 +90,15 @@ class TeacherImportTest extends TestCase
         $this->assertSame('Διπλότυπο', $rows->firstWhere('status', 'error')['errors']['email']);
     }
 
-    public function test_existing_teacher_account_is_skipped_not_overwritten(): void
+    public function test_existing_teacher_account_is_updated(): void
     {
         $admin = User::factory()->admin()->create();
-        $existing = User::factory()->teacher()->create(['email' => 'maria@example.gr', 'subject' => 'History']);
+        $existing = User::factory()->teacher()->create([
+            'email' => 'maria@example.gr',
+            'first_name' => 'OldFirst',
+            'last_name' => 'OldLast',
+            'subject' => 'History',
+        ]);
         $originalPassword = $existing->password;
 
         $file = $this->makeXlsxUpload($this->headers, [
@@ -100,18 +106,87 @@ class TeacherImportTest extends TestCase
         ]);
 
         $preview = $this->actingAs($admin)->post(route('admin.imports.preview', 'teachers'), ['file' => $file]);
-        $this->assertSame(1, $preview->viewData('summary')['skip']);
+        $this->assertSame(1, $preview->viewData('summary')['update']);
 
         $token = $preview->viewData('token');
         $this->actingAs($admin)->post(route('admin.imports.commit', 'teachers'), ['token' => $token]);
 
         $existing->refresh();
-        $this->assertSame('History', $existing->subject);
+        $this->assertSame('Maria', $existing->first_name);
+        $this->assertSame('Papadopoulou', $existing->last_name);
+        $this->assertSame('Mathematics', $existing->subject);
         $this->assertSame($originalPassword, $existing->password);
 
         $batch = ImportBatch::firstOrFail();
-        $this->assertSame(0, $batch->successful_rows);
-        $this->assertSame(1, $batch->skipped_rows);
+        $this->assertSame(1, $batch->successful_rows);
+        $this->assertSame(0, $batch->skipped_rows);
+    }
+
+    public function test_password_column_sets_the_password_for_a_new_teacher(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $headers = [...$this->headers, 'password'];
+        $file = $this->makeXlsxUpload($headers, [
+            ['Maria', 'Papadopoulou', 'maria@example.gr', 'teacher', 'Mathematics', 'secret1'],
+        ]);
+
+        $preview = $this->actingAs($admin)->post(route('admin.imports.preview', 'teachers'), ['file' => $file]);
+        $token = $preview->viewData('token');
+        $this->actingAs($admin)->post(route('admin.imports.commit', 'teachers'), ['token' => $token]);
+
+        $teacher = User::where('email', 'maria@example.gr')->firstOrFail();
+        $this->assertTrue(Hash::check('secret1', $teacher->password));
+    }
+
+    public function test_password_column_updates_the_password_for_an_existing_teacher(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $existing = User::factory()->teacher()->create(['email' => 'maria@example.gr']);
+
+        $headers = [...$this->headers, 'password'];
+        $file = $this->makeXlsxUpload($headers, [
+            ['Maria', 'Papadopoulou', 'maria@example.gr', 'teacher', 'Mathematics', 'newpass1'],
+        ]);
+
+        $preview = $this->actingAs($admin)->post(route('admin.imports.preview', 'teachers'), ['file' => $file]);
+        $token = $preview->viewData('token');
+        $this->actingAs($admin)->post(route('admin.imports.commit', 'teachers'), ['token' => $token]);
+
+        $existing->refresh();
+        $this->assertTrue(Hash::check('newpass1', $existing->password));
+    }
+
+    public function test_password_shorter_than_four_characters_is_rejected(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $headers = [...$this->headers, 'password'];
+        $file = $this->makeXlsxUpload($headers, [
+            ['Maria', 'Papadopoulou', 'maria@example.gr', 'teacher', 'Mathematics', 'abc'],
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.imports.preview', 'teachers'), ['file' => $file]);
+
+        $rows = $response->viewData('rows');
+        $this->assertSame('Πρέπει να έχει τουλάχιστον 4 χαρακτήρες', $rows->first()['errors']['password']);
+    }
+
+    public function test_an_email_already_used_by_a_guardian_is_rejected_not_overwritten(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $guardian = User::factory()->guardian()->create(['email' => 'maria@example.gr']);
+
+        $file = $this->makeXlsxUpload($this->headers, [
+            ['Maria', 'Papadopoulou', 'maria@example.gr', 'teacher', 'Mathematics'],
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.imports.preview', 'teachers'), ['file' => $file]);
+
+        $rows = $response->viewData('rows');
+        $this->assertSame('error', $rows->first()['status']);
+        $this->assertArrayHasKey('email', $rows->first()['errors']);
+
+        $guardian->refresh();
+        $this->assertSame(UserRole::Guardian, $guardian->role);
     }
 
     public function test_invalid_email_is_reported_as_an_error(): void

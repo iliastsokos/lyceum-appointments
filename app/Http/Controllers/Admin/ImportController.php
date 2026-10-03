@@ -201,8 +201,8 @@ class ImportController extends Controller
     public function teacherTemplate(): StreamedResponse
     {
         return $this->templateDownload(
-            ['first_name', 'last_name', 'email', 'role', 'subject'],
-            [['Maria', 'Papadopoulou', 'maria@example.gr', 'teacher', 'Mathematics']],
+            ['first_name', 'last_name', 'email', 'role', 'subject', 'password'],
+            [['Maria', 'Papadopoulou', 'maria@example.gr', 'teacher', 'Mathematics', '']],
             'teacher-import-template.xlsx'
         );
     }

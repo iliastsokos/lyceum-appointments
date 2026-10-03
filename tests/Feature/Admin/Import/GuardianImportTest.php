@@ -223,6 +223,26 @@ class GuardianImportTest extends TestCase
         $this->assertSame('Πρέπει να έχει τουλάχιστον 4 χαρακτήρες', $rows->first()['errors']['guardian_password']);
     }
 
+    public function test_an_email_already_used_by_a_teacher_is_rejected_not_overwritten(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $teacher = User::factory()->teacher()->create(['email' => 'gpap@example.gr']);
+
+        $file = $this->makeXlsxUpload($this->headers, [
+            ['Giorgos', 'Papadopoulos', 'gpap@example.gr', 'Maria', 'Papadopoulou', 'B1'],
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.imports.preview', 'guardians'), ['file' => $file]);
+
+        $rows = $response->viewData('rows');
+        $this->assertSame('error', $rows->first()['status']);
+        $this->assertArrayHasKey('guardian_email', $rows->first()['errors']);
+
+        $teacher->refresh();
+        $this->assertSame(UserRole::Teacher, $teacher->role);
+        $this->assertSame(0, $teacher->children()->count());
+    }
+
     public function test_invalid_class_is_rejected(): void
     {
         $admin = User::factory()->admin()->create();

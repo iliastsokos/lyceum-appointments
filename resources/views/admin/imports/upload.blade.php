@@ -24,7 +24,7 @@
 
                 <p class="mt-2 text-sm text-gray-600">
                     @if ($type->value === 'teachers')
-                        {{ __('Στήλες: first_name, last_name, email, role, subject. Η στήλη role πρέπει να έχει την τιμή "teacher".') }}
+                        {{ __('Στήλες: first_name, last_name, email, role, subject, password (προαιρετική). Η στήλη role πρέπει να έχει την τιμή "teacher". Αν το email υπάρχει ήδη, ο λογαριασμός ενημερώνεται (όνομα, ειδικότητα, και κωδικός αν δοθεί) αντί να παραλειφθεί.') }}
                     @else
                         {{ __('Στήλες: guardian_first_name, guardian_last_name, guardian_email, guardian_password (προαιρετική), child_first_name, child_last_name, child_class. Επαναλάβετε το ίδιο guardian_email για πολλά παιδιά. Αν το email υπάρχει ήδη, ο λογαριασμός ενημερώνεται (όνομα, και κωδικός αν δοθεί) και τα παιδιά συγχρονίζονται πλήρως με το αρχείο: όσα λείπουν διαγράφονται, εκτός αν έχουν ήδη ραντεβού — τότε παραμένουν.') }}
                     @endif
