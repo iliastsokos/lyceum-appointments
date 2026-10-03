@@ -6,6 +6,7 @@ use App\Enums\UserRole;
 use App\Models\ImportBatch;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Tests\Support\BuildsTestSpreadsheets;
 use Tests\TestCase;
@@ -69,27 +70,114 @@ class GuardianImportTest extends TestCase
         $this->assertSame(1, User::where('email', 'gpap@example.gr')->count());
     }
 
-    public function test_existing_guardian_account_is_skipped_and_no_children_are_associated(): void
+    public function test_existing_guardian_is_updated_and_the_child_is_associated(): void
     {
         $admin = User::factory()->admin()->create();
-        $existingGuardian = User::factory()->guardian()->create(['email' => 'gpap@example.gr']);
+        $existingGuardian = User::factory()->guardian()->create([
+            'email' => 'gpap@example.gr',
+            'first_name' => 'OldFirst',
+            'last_name' => 'OldLast',
+        ]);
+        $originalPassword = $existingGuardian->password;
 
         $file = $this->makeXlsxUpload($this->headers, [
             ['Giorgos', 'Papadopoulos', 'gpap@example.gr', 'Maria', 'Papadopoulou', 'B1'],
         ]);
 
         $preview = $this->actingAs($admin)->post(route('admin.imports.preview', 'guardians'), ['file' => $file]);
-        $this->assertSame(1, $preview->viewData('summary')['skip']);
+        $this->assertSame(1, $preview->viewData('summary')['update']);
         $this->assertSame(1, $preview->viewData('summary')['guardians_existing']);
 
         $token = $preview->viewData('token');
-        $this->actingAs($admin)->post(route('admin.imports.commit', 'guardians'), ['token' => $token]);
+        $result = $this->actingAs($admin)->post(route('admin.imports.commit', 'guardians'), ['token' => $token]);
+        $result->assertSee('1 παιδιά συσχετίστηκαν');
 
-        $this->assertSame(0, $existingGuardian->children()->count());
+        $this->assertSame(1, User::where('email', 'gpap@example.gr')->count());
+        $existingGuardian->refresh();
+        $this->assertSame('Giorgos', $existingGuardian->first_name);
+        $this->assertSame('Papadopoulos', $existingGuardian->last_name);
+        $this->assertSame($originalPassword, $existingGuardian->password);
+        $this->assertSame(1, $existingGuardian->children()->count());
+        $this->assertTrue($existingGuardian->children()->where('first_name', 'Maria')->exists());
 
         $batch = ImportBatch::firstOrFail();
-        $this->assertSame(0, $batch->successful_rows);
-        $this->assertSame(1, $batch->skipped_rows);
+        $this->assertSame(1, $batch->successful_rows);
+        $this->assertSame(0, $batch->skipped_rows);
+    }
+
+    public function test_existing_guardians_children_are_matched_or_added_never_removed(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $existingGuardian = User::factory()->guardian()->create(['email' => 'gpap@example.gr']);
+        $existingGuardian->children()->create(['first_name' => 'Maria', 'last_name' => 'Papadopoulou', 'class' => 'A1']);
+        $existingGuardian->children()->create(['first_name' => 'Untouched', 'last_name' => 'Child', 'class' => 'G1']);
+
+        // Re-upload with an updated class for the matched child and one brand-new child.
+        // The untouched child (not in the file) must survive.
+        $file = $this->makeXlsxUpload($this->headers, [
+            ['Giorgos', 'Papadopoulos', 'gpap@example.gr', 'Maria', 'Papadopoulou', 'B1'],
+            ['Giorgos', 'Papadopoulos', 'gpap@example.gr', 'Nikos', 'Papadopoulos', 'G2'],
+        ]);
+
+        $preview = $this->actingAs($admin)->post(route('admin.imports.preview', 'guardians'), ['file' => $file]);
+        $token = $preview->viewData('token');
+        $this->actingAs($admin)->post(route('admin.imports.commit', 'guardians'), ['token' => $token]);
+
+        $this->assertSame(3, $existingGuardian->children()->count());
+        $this->assertSame('B1', $existingGuardian->children()->where('first_name', 'Maria')->firstOrFail()->class);
+        $this->assertTrue($existingGuardian->children()->where('first_name', 'Nikos')->exists());
+        $this->assertTrue($existingGuardian->children()->where('first_name', 'Untouched')->exists());
+    }
+
+    public function test_guardian_password_column_sets_the_password_for_a_new_guardian(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $headers = [...$this->headers];
+        array_splice($headers, 3, 0, ['guardian_password']);
+        $file = $this->makeXlsxUpload($headers, [
+            ['Giorgos', 'Papadopoulos', 'gpap@example.gr', 'secret1', 'Maria', 'Papadopoulou', 'B1'],
+        ]);
+
+        $preview = $this->actingAs($admin)->post(route('admin.imports.preview', 'guardians'), ['file' => $file]);
+        $token = $preview->viewData('token');
+        $this->actingAs($admin)->post(route('admin.imports.commit', 'guardians'), ['token' => $token]);
+
+        $guardian = User::where('email', 'gpap@example.gr')->firstOrFail();
+        $this->assertTrue(Hash::check('secret1', $guardian->password));
+    }
+
+    public function test_guardian_password_column_updates_the_password_for_an_existing_guardian(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $existingGuardian = User::factory()->guardian()->create(['email' => 'gpap@example.gr']);
+
+        $headers = [...$this->headers];
+        array_splice($headers, 3, 0, ['guardian_password']);
+        $file = $this->makeXlsxUpload($headers, [
+            ['Giorgos', 'Papadopoulos', 'gpap@example.gr', 'newpass1', 'Maria', 'Papadopoulou', 'B1'],
+        ]);
+
+        $preview = $this->actingAs($admin)->post(route('admin.imports.preview', 'guardians'), ['file' => $file]);
+        $token = $preview->viewData('token');
+        $this->actingAs($admin)->post(route('admin.imports.commit', 'guardians'), ['token' => $token]);
+
+        $existingGuardian->refresh();
+        $this->assertTrue(Hash::check('newpass1', $existingGuardian->password));
+    }
+
+    public function test_guardian_password_shorter_than_four_characters_is_rejected(): void
+    {
+        $admin = User::factory()->admin()->create();
+        $headers = [...$this->headers];
+        array_splice($headers, 3, 0, ['guardian_password']);
+        $file = $this->makeXlsxUpload($headers, [
+            ['Giorgos', 'Papadopoulos', 'gpap@example.gr', 'abc', 'Maria', 'Papadopoulou', 'B1'],
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.imports.preview', 'guardians'), ['file' => $file]);
+
+        $rows = $response->viewData('rows');
+        $this->assertSame('Πρέπει να έχει τουλάχιστον 4 χαρακτήρες', $rows->first()['errors']['guardian_password']);
     }
 
     public function test_invalid_class_is_rejected(): void

@@ -155,7 +155,7 @@ class ImportController extends Controller
 
         return response()->streamDownload(function () use ($credentials) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['email', 'temporary_password']);
+            fputcsv($handle, ['email', 'password']);
             foreach ($credentials as $row) {
                 fputcsv($handle, [$this->csvSafe($row['email']), $this->csvSafe($row['password'])]);
             }
@@ -210,10 +210,10 @@ class ImportController extends Controller
     public function guardianTemplate(): StreamedResponse
     {
         return $this->templateDownload(
-            ['guardian_first_name', 'guardian_last_name', 'guardian_email', 'child_first_name', 'child_last_name', 'child_class'],
+            ['guardian_first_name', 'guardian_last_name', 'guardian_email', 'guardian_password', 'child_first_name', 'child_last_name', 'child_class'],
             [
-                ['Giorgos', 'Papadopoulos', 'gpap@example.gr', 'Maria', 'Papadopoulou', 'B1'],
-                ['Giorgos', 'Papadopoulos', 'gpap@example.gr', 'Nikos', 'Papadopoulos', 'G2'],
+                ['Giorgos', 'Papadopoulos', 'gpap@example.gr', '', 'Maria', 'Papadopoulou', 'B1'],
+                ['Giorgos', 'Papadopoulos', 'gpap@example.gr', '', 'Nikos', 'Papadopoulos', 'G2'],
             ],
             'guardian-import-template.xlsx'
         );

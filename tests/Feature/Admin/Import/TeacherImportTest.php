@@ -60,7 +60,7 @@ class TeacherImportTest extends TestCase
         $response->assertSee('Η εισαγωγή ολοκληρώθηκε.');
         $response->assertSee('1 γραμμές επεξεργάστηκαν');
         $response->assertSee('1 λογαριασμοί δημιουργήθηκαν');
-        $response->assertSee('Λήψη Προσωρινών Κωδικών');
+        $response->assertSee('Λήψη Κωδικών');
 
         $teacher = User::where('email', 'maria@example.gr')->firstOrFail();
         $this->assertSame(UserRole::Teacher, $teacher->role);

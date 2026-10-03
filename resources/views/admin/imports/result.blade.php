@@ -26,7 +26,7 @@
 
                 <div class="mt-6 flex flex-wrap gap-4 text-sm">
                     @if ($hasCredentials)
-                        <a href="{{ route('admin.imports.history.credentials', $batch) }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Λήψη Προσωρινών Κωδικών (.csv)') }}</a>
+                        <a href="{{ route('admin.imports.history.credentials', $batch) }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Λήψη Κωδικών (.csv)') }}</a>
                     @endif
                     @if ($batch->failed_rows > 0)
                         <a href="{{ route('admin.imports.history.errors', $batch) }}" class="text-indigo-600 hover:text-indigo-900">{{ __('Λήψη Αναφοράς Σφαλμάτων') }}</a>
@@ -35,7 +35,7 @@
                 </div>
 
                 @if ($hasCredentials)
-                    <p class="mt-4 text-xs text-gray-500">{{ __('Οι προσωρινοί κωδικοί μπορούν να ληφθούν μόνο μία φορά. Μοιραστείτε τους με ασφάλεια με τους κατόχους των λογαριασμών — θα χρειαστεί να αλλάξουν τον κωδικό τους στην πρώτη σύνδεση.') }}</p>
+                    <p class="mt-4 text-xs text-gray-500">{{ __('Οι κωδικοί μπορούν να ληφθούν μόνο μία φορά. Μοιραστείτε τους με ασφάλεια με τους κατόχους των λογαριασμών.') }}</p>
                 @endif
             </div>
         </div>

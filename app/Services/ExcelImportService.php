@@ -27,6 +27,14 @@ class ExcelImportService
 
     private const GUARDIAN_HEADERS = ['guardian_first_name', 'guardian_last_name', 'guardian_email', 'child_first_name', 'child_last_name', 'child_class'];
 
+    /**
+     * Optional — if present and non-empty for a row, it sets that
+     * guardian's initial/replacement password instead of an
+     * auto-generated one. Not in GUARDIAN_HEADERS so existing template
+     * files without this column keep working unchanged.
+     */
+    private const GUARDIAN_PASSWORD_HEADER = 'guardian_password';
+
     public function __construct(private readonly AccountProvisioningService $provisioning) {}
 
     /**
@@ -196,6 +204,7 @@ class ExcelImportService
             $guardianFirstName = $raw['guardian_first_name'] ?? '';
             $guardianLastName = $raw['guardian_last_name'] ?? '';
             $guardianEmail = Str::lower($raw['guardian_email'] ?? '');
+            $guardianPassword = trim($raw[self::GUARDIAN_PASSWORD_HEADER] ?? '');
             $childFirstName = $raw['child_first_name'] ?? '';
             $childLastName = $raw['child_last_name'] ?? '';
             $childClass = Str::upper($raw['child_class'] ?? '');
@@ -213,6 +222,10 @@ class ExcelImportService
                 $errors['guardian_email'] = 'Μη έγκυρο email';
             }
 
+            if ($guardianPassword !== '' && mb_strlen($guardianPassword) < 4) {
+                $errors[self::GUARDIAN_PASSWORD_HEADER] = 'Πρέπει να έχει τουλάχιστον 4 χαρακτήρες';
+            }
+
             if ($childFirstName === '') {
                 $errors['child_first_name'] = 'Υποχρεωτικό';
             }
@@ -228,7 +241,7 @@ class ExcelImportService
 
             return [
                 'row_number' => $item['row_number'],
-                'data' => compact('guardianFirstName', 'guardianLastName', 'guardianEmail', 'childFirstName', 'childLastName', 'childClass'),
+                'data' => compact('guardianFirstName', 'guardianLastName', 'guardianEmail', 'guardianPassword', 'childFirstName', 'childLastName', 'childClass'),
                 'errors' => $errors,
                 'status' => $errors === [] ? 'pending' : 'error',
                 'skip_reason' => null,
@@ -240,12 +253,11 @@ class ExcelImportService
 
         $validated = $validated->map(function (array $row) use ($existingEmails) {
             if ($row['status'] === 'pending') {
-                if (isset($existingEmails[$row['data']['guardianEmail']])) {
-                    $row['status'] = 'skip';
-                    $row['skip_reason'] = 'Υπάρχων λογαριασμός κηδεμόνα';
-                } else {
-                    $row['status'] = 'valid';
-                }
+                // 'update': the guardian account already exists and will be
+                // updated (name, and password if provided) rather than
+                // skipped; their children will be matched-or-added, never
+                // removed.
+                $row['status'] = isset($existingEmails[$row['data']['guardianEmail']]) ? 'update' : 'valid';
             }
 
             return $row;
@@ -253,7 +265,7 @@ class ExcelImportService
 
         $summary = $this->summarize($validated);
         $summary['guardians_new'] = $validated->where('status', 'valid')->pluck('data.guardianEmail')->unique()->count();
-        $summary['guardians_existing'] = $validated->where('status', 'skip')->pluck('data.guardianEmail')->unique()->count();
+        $summary['guardians_existing'] = $validated->where('status', 'update')->pluck('data.guardianEmail')->unique()->count();
 
         return ['rows' => $validated, 'summary' => $summary];
     }
@@ -343,9 +355,8 @@ class ExcelImportService
             'skipped_rows' => 0,
         ]);
 
-        $childrenCreated = 0;
+        $processedRows = 0;
         $failedRows = 0;
-        $skippedRows = 0;
         $credentials = [];
 
         foreach ($validatedRows->where('status', 'error') as $row) {
@@ -353,41 +364,23 @@ class ExcelImportService
             $this->recordRowErrors($batch, $row);
         }
 
-        foreach ($validatedRows->where('status', 'skip') as $row) {
-            $skippedRows++;
-            $this->recordRowSkip($batch, $row, 'guardian_email');
-        }
-
-        $groups = $validatedRows->where('status', 'valid')->groupBy('data.guardianEmail');
+        $groups = $validatedRows->whereIn('status', ['valid', 'update'])->groupBy('data.guardianEmail');
 
         foreach ($groups as $email => $rowsForGuardian) {
+            $first = $rowsForGuardian->first();
+            $isUpdate = $first['status'] === 'update';
+            $providedPassword = $first['data']['guardianPassword'];
+
             try {
-                $temporaryPassword = $this->provisioning->generateTemporaryPassword();
-                $first = $rowsForGuardian->first();
+                $credential = $isUpdate
+                    ? $this->updateGuardianGroup($email, $first, $rowsForGuardian, $providedPassword)
+                    : $this->createGuardianGroup($email, $first, $rowsForGuardian, $providedPassword);
 
-                $guardian = DB::transaction(function () use ($rowsForGuardian, $first, $email, $temporaryPassword) {
-                    $guardian = User::create([
-                        'role' => UserRole::Guardian,
-                        'first_name' => $first['data']['guardianFirstName'],
-                        'last_name' => $first['data']['guardianLastName'],
-                        'email' => $email,
-                        'password' => Hash::make($temporaryPassword),
-                        'status' => UserStatus::Active,
-                    ]);
+                $processedRows += $rowsForGuardian->count();
 
-                    foreach ($rowsForGuardian as $row) {
-                        $guardian->children()->create([
-                            'first_name' => $row['data']['childFirstName'],
-                            'last_name' => $row['data']['childLastName'],
-                            'class' => $row['data']['childClass'],
-                        ]);
-                    }
-
-                    return $guardian;
-                });
-
-                $childrenCreated += $rowsForGuardian->count();
-                $credentials[] = ['email' => $guardian->email, 'password' => $temporaryPassword];
+                if ($credential !== null) {
+                    $credentials[] = $credential;
+                }
             } catch (\Throwable $e) {
                 Log::error('Guardian import group failed', ['email' => $email, 'exception' => $e->getMessage()]);
                 $failedRows += $rowsForGuardian->count();
@@ -397,16 +390,99 @@ class ExcelImportService
                         'import_batch_id' => $batch->id,
                         'row_number' => $row['row_number'],
                         'field' => 'guardian_email',
-                        'error_message' => 'This account could not be created. Please try importing this row again.',
+                        'error_message' => 'This account could not be created or updated. Please try importing this row again.',
                         'row_data' => $row['data'],
                     ]);
                 }
             }
         }
 
-        $batch->update(['successful_rows' => $childrenCreated, 'failed_rows' => $failedRows, 'skipped_rows' => $skippedRows]);
+        $batch->update(['successful_rows' => $processedRows, 'failed_rows' => $failedRows, 'skipped_rows' => 0]);
 
         return $batch->fresh()->setAttribute('credentials', $credentials);
+    }
+
+    /**
+     * @param  Collection<int, array>  $rowsForGuardian
+     * @return array{email: string, password: string}
+     */
+    private function createGuardianGroup(string $email, array $first, Collection $rowsForGuardian, string $providedPassword): array
+    {
+        $password = $providedPassword !== '' ? $providedPassword : $this->provisioning->generateTemporaryPassword();
+
+        DB::transaction(function () use ($rowsForGuardian, $first, $email, $password) {
+            $guardian = User::create([
+                'role' => UserRole::Guardian,
+                'first_name' => $first['data']['guardianFirstName'],
+                'last_name' => $first['data']['guardianLastName'],
+                'email' => $email,
+                'password' => Hash::make($password),
+                'status' => UserStatus::Active,
+            ]);
+
+            foreach ($rowsForGuardian as $row) {
+                $guardian->children()->create([
+                    'first_name' => $row['data']['childFirstName'],
+                    'last_name' => $row['data']['childLastName'],
+                    'class' => $row['data']['childClass'],
+                ]);
+            }
+        });
+
+        return ['email' => $email, 'password' => $password];
+    }
+
+    /**
+     * Updates an existing guardian's name (and password, if one was
+     * provided in the file) and reconciles their children: a child whose
+     * first/last name already exists under this guardian has its class
+     * updated in place, a child not found is added — existing children
+     * absent from the file are never removed (they may have appointment
+     * history that a hard delete would be blocked on anyway).
+     *
+     * @param  Collection<int, array>  $rowsForGuardian
+     * @return array{email: string, password: string}|null null when no
+     *                                                     password was provided, since nothing changed that the admin
+     *                                                     needs to be shown.
+     */
+    private function updateGuardianGroup(string $email, array $first, Collection $rowsForGuardian, string $providedPassword): ?array
+    {
+        $credential = null;
+
+        DB::transaction(function () use ($rowsForGuardian, $first, $email, $providedPassword, &$credential) {
+            $guardian = User::whereRaw('LOWER(email) = ?', [$email])->firstOrFail();
+
+            $updates = [
+                'first_name' => $first['data']['guardianFirstName'],
+                'last_name' => $first['data']['guardianLastName'],
+            ];
+
+            if ($providedPassword !== '') {
+                $updates['password'] = Hash::make($providedPassword);
+                $credential = ['email' => $email, 'password' => $providedPassword];
+            }
+
+            $guardian->update($updates);
+
+            foreach ($rowsForGuardian as $row) {
+                $child = $guardian->children()
+                    ->whereRaw('LOWER(first_name) = ?', [Str::lower($row['data']['childFirstName'])])
+                    ->whereRaw('LOWER(last_name) = ?', [Str::lower($row['data']['childLastName'])])
+                    ->first();
+
+                if ($child) {
+                    $child->update(['class' => $row['data']['childClass']]);
+                } else {
+                    $guardian->children()->create([
+                        'first_name' => $row['data']['childFirstName'],
+                        'last_name' => $row['data']['childLastName'],
+                        'class' => $row['data']['childClass'],
+                    ]);
+                }
+            }
+        });
+
+        return $credential;
     }
 
     /**
@@ -460,6 +536,7 @@ class ExcelImportService
         return [
             'total' => $rows->count(),
             'valid' => $rows->where('status', 'valid')->count(),
+            'update' => $rows->where('status', 'update')->count(),
             'skip' => $rows->where('status', 'skip')->count(),
             'error' => $rows->where('status', 'error')->count(),
         ];

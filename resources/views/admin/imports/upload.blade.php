@@ -26,7 +26,7 @@
                     @if ($type->value === 'teachers')
                         {{ __('Στήλες: first_name, last_name, email, role, subject. Η στήλη role πρέπει να έχει την τιμή "teacher".') }}
                     @else
-                        {{ __('Στήλες: guardian_first_name, guardian_last_name, guardian_email, child_first_name, child_last_name, child_class. Επαναλάβετε το ίδιο guardian_email για πολλά παιδιά.') }}
+                        {{ __('Στήλες: guardian_first_name, guardian_last_name, guardian_email, guardian_password (προαιρετική), child_first_name, child_last_name, child_class. Επαναλάβετε το ίδιο guardian_email για πολλά παιδιά. Αν το email υπάρχει ήδη, ο λογαριασμός ενημερώνεται (όνομα, και κωδικός αν δοθεί) και τα παιδιά προστίθενται/ενημερώνονται, χωρίς διαγραφή υπαρχόντων.') }}
                     @endif
                 </p>
 
