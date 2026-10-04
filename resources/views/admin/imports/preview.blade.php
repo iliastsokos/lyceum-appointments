@@ -8,6 +8,13 @@
     <div class="py-12">
         <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
 
+            @php
+                $isGuardians = $type->value === 'guardians';
+                $emailField = $isGuardians ? 'guardianEmail' : 'email';
+                $passwordField = $isGuardians ? 'guardianPassword' : 'password';
+                $entityLabel = $isGuardians ? 'κηδεμόνες' : 'εκπαιδευτικοί';
+            @endphp
+
             <div class="bg-white shadow-sm sm:rounded-lg p-6">
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
                     <div>
@@ -16,11 +23,11 @@
                     </div>
                     <div>
                         <div class="text-2xl font-semibold text-green-700">{{ $summary['valid'] }}</div>
-                        <div class="text-xs text-gray-500 uppercase tracking-wide">{{ __('Έγκυρες') }}</div>
+                        <div class="text-xs text-gray-500 uppercase tracking-wide">{{ __('Νέες') }}</div>
                     </div>
                     <div>
-                        <div class="text-2xl font-semibold text-yellow-700">{{ $summary['skip'] }}</div>
-                        <div class="text-xs text-gray-500 uppercase tracking-wide">{{ __('Υπάρχουσες (θα παραλειφθούν)') }}</div>
+                        <div class="text-2xl font-semibold text-blue-700">{{ $summary['update'] }}</div>
+                        <div class="text-xs text-gray-500 uppercase tracking-wide">{{ __('Θα ενημερωθούν') }}</div>
                     </div>
                     <div>
                         <div class="text-2xl font-semibold text-red-700">{{ $summary['error'] }}</div>
@@ -28,13 +35,13 @@
                     </div>
                 </div>
 
-                @if ($type->value === 'guardians')
+                @if ($isGuardians)
                     <p class="mt-4 text-sm text-gray-600 text-center">
-                        {{ __(':new νέοι λογαριασμοί κηδεμόνων, :existing υπάρχοντες κηδεμόνες εντοπίστηκαν.', ['new' => $summary['guardians_new'], 'existing' => $summary['guardians_existing']]) }}
+                        {{ __(':new νέοι λογαριασμοί κηδεμόνων θα δημιουργηθούν, :existing υπάρχοντες κηδεμόνες θα ενημερωθούν.', ['new' => $summary['guardians_new'], 'existing' => $summary['guardians_existing']]) }}
                     </p>
                 @endif
 
-                @php($nothingToImport = $summary['valid'] === 0)
+                @php($nothingToImport = $summary['valid'] === 0 && $summary['update'] === 0)
                 <form
                     method="POST"
                     action="{{ route('admin.imports.commit', $type->value) }}"
@@ -78,21 +85,23 @@
                 </div>
             @endif
 
-            @if ($summary['skip'] > 0)
+            @if ($summary['update'] > 0)
                 <div class="bg-white shadow-sm sm:rounded-lg p-6 overflow-x-auto">
-                    <h3 class="text-sm font-medium text-gray-900 mb-4">{{ __('Υπάρχοντες λογαριασμοί (θα παραλειφθούν)') }}</h3>
+                    <h3 class="text-sm font-medium text-gray-900 mb-4">{{ __('Υπάρχοντες :entity που θα ενημερωθούν', ['entity' => $entityLabel]) }}</h3>
                     <table class="min-w-full divide-y divide-gray-200 text-sm">
                         <thead>
                             <tr class="text-left text-gray-500">
                                 <th class="py-2 pr-4">{{ __('Γραμμή') }}</th>
                                 <th class="py-2 pr-4">{{ __('Email') }}</th>
+                                <th class="py-2 pr-4">{{ __('Κωδικός') }}</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100">
-                            @foreach ($rows->where('status', 'skip') as $row)
+                            @foreach ($rows->where('status', 'update')->unique("data.{$emailField}") as $row)
                                 <tr>
                                     <td class="py-2 pr-4">{{ $row['row_number'] }}</td>
-                                    <td class="py-2 pr-4">{{ $row['data']['email'] ?? $row['data']['guardianEmail'] ?? '' }}</td>
+                                    <td class="py-2 pr-4">{{ $row['data'][$emailField] }}</td>
+                                    <td class="py-2 pr-4">{{ $row['data'][$passwordField] !== '' ? __('Θα αλλάξει') : __('Παραμένει ίδιος') }}</td>
                                 </tr>
                             @endforeach
                         </tbody>

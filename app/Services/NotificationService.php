@@ -24,12 +24,16 @@ class NotificationService
     public function send(User $user, string $type, string $title, string $message): ?Notification
     {
         try {
-            $notification = Notification::create([
+            $notification = new Notification([
                 'user_id' => $user->id,
                 'type' => $type,
                 'title' => $title,
                 'message' => $message,
             ]);
+            // Set explicitly: the column's own default is the database clock
+            // (UTC), not the application's timezone used everywhere else.
+            $notification->created_at = now();
+            $notification->save();
         } catch (Throwable $e) {
             Log::error('Failed to record in-app notification.', [
                 'user_id' => $user->id,

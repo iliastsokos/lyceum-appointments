@@ -9,7 +9,6 @@ use App\Models\Appointment;
 use App\Models\AppointmentSlot;
 use App\Models\Child;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -34,10 +33,8 @@ class BookingService
             throw ValidationException::withMessages(['child' => 'Μπορείτε να κλείσετε ραντεβού μόνο για τα δικά σας παιδιά.']);
         }
 
-        $slotStart = Carbon::parse("{$slot->date->toDateString()} {$slot->start_time}");
-
-        if ($slotStart->isPast()) {
-            throw ValidationException::withMessages(['slot' => 'Αυτή η ώρα έχει περάσει και δεν μπορεί πλέον να κλειστεί.']);
+        if ($slot->isPastBookingCutoff()) {
+            throw ValidationException::withMessages(['slot' => 'Η προθεσμία κράτησης για αυτή την ημέρα έχει περάσει. Οι κρατήσεις κλείνουν τα μεσάνυχτα πριν από κάθε ημέρα ραντεβού.']);
         }
 
         $appointment = $this->runInTransactionWithLockRetry(function () use ($slot, $guardian, $child) {
@@ -54,7 +51,15 @@ class BookingService
                 'guardian_id' => $guardian->id,
                 'child_id' => $child->id,
                 'status' => AppointmentStatus::New,
-                'date' => $lockedSlot->date,
+                // ->toDateString(), not the bare Carbon date: assigning a
+                // DateTimeInterface to a 'date:Y-m-d'-cast attribute still
+                // writes it through the connection's full datetime format
+                // (e.g. "2026-10-03 00:00:00") instead of the cast's own
+                // format, which then silently breaks any exact-match query
+                // against this column (today()->toDateString() never equals
+                // that stored value) — passing an already-formatted string
+                // sidesteps the mismatch entirely.
+                'date' => $lockedSlot->date->toDateString(),
                 'start_time' => $lockedSlot->start_time,
                 'end_time' => $lockedSlot->end_time,
                 'booked_at' => now(),

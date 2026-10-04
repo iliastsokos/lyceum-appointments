@@ -21,7 +21,7 @@ class AppointmentController extends Controller
         $appointments = $request->user()->appointmentsAsTeacher()
             ->with(['guardian', 'child'])
             ->when($request->filled('status'), fn ($q) => $q->where('status', $request->string('status')))
-            ->when($request->filled('date'), fn ($q) => $q->where('date', $request->string('date')))
+            ->when($request->filled('date'), fn ($q) => $q->whereDate('date', $request->string('date')->toString()))
             ->upcomingFirst()
             ->get();
 

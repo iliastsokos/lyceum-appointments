@@ -27,9 +27,7 @@ class BookingController extends Controller
             ->get();
 
         $teacherIdsWithAvailability = AppointmentSlot::where('status', SlotStatus::Available)
-            ->where('date', '>=', today()->toDateString())
-            ->where(fn ($q) => $q->where('date', '>', today()->toDateString())
-                ->orWhere('start_time', '>', now()->format('H:i:s')))
+            ->where('date', '>', today()->toDateString())
             ->whereIn('teacher_id', $teachers->pluck('id'))
             ->distinct()
             ->pluck('teacher_id')
@@ -51,9 +49,7 @@ class BookingController extends Controller
         // days that matter.
         $availableDates = AppointmentSlot::where('teacher_id', $teacher->id)
             ->where('status', SlotStatus::Available)
-            ->where('date', '>=', today()->toDateString())
-            ->where(fn ($q) => $q->where('date', '>', today()->toDateString())
-                ->orWhere('start_time', '>', now()->format('H:i:s')))
+            ->where('date', '>', today()->toDateString())
             ->distinct()
             ->orderBy('date')
             ->pluck('date')
@@ -92,7 +88,7 @@ class BookingController extends Controller
     {
         abort_unless($teacher->isTeacher() && $teacher->isActive(), 404);
         abort_unless($slot->teacher_id === $teacher->id, 404);
-        abort_unless($slot->status === SlotStatus::Available, 404);
+        abort_unless($slot->isBookable(), 404);
 
         $children = $request->user()->children()->orderBy('first_name')->get();
 

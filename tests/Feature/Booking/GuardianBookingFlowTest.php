@@ -79,27 +79,30 @@ class GuardianBookingFlowTest extends TestCase
         $this->assertStringContainsString('bg-gray-50', substr($content, max(0, $emptyPos - 400), 400));
     }
 
-    public function test_teacher_list_shows_gray_when_the_only_available_slot_today_has_passed(): void
+    public function test_teacher_list_shows_gray_when_the_only_available_slot_is_today_even_if_its_time_has_not_passed(): void
     {
-        $this->travelTo(Carbon::parse('2026-09-15 20:00:00'));
+        $this->travelTo(Carbon::parse('2026-09-15 08:00:00'));
 
         $guardian = User::factory()->guardian()->create();
-        $teacher = User::factory()->teacher()->create(['first_name' => 'Pastonlyteacher']);
+        $teacher = User::factory()->teacher()->create(['first_name' => 'Todayonlyteacher']);
         $availability = Availability::factory()->for($teacher, 'teacher')->create(['date' => today()->toDateString()]);
 
+        // 20:00 is still hours away from the 08:00 "now" above — this slot's
+        // own start time hasn't passed yet, but same-day bookings close at
+        // midnight regardless, so it must still read as unavailable.
         AppointmentSlot::factory()->create([
             'teacher_id' => $teacher->id,
             'availability_id' => $availability->id,
             'date' => today()->toDateString(),
-            'start_time' => '09:00:00',
-            'end_time' => '09:05:00',
+            'start_time' => '20:00:00',
+            'end_time' => '20:05:00',
             'status' => SlotStatus::Available,
         ]);
 
         $response = $this->actingAs($guardian)->get(route('guardian.book.teachers'));
         $content = $response->getContent();
 
-        $pos = strpos($content, 'Pastonlyteacher');
+        $pos = strpos($content, 'Todayonlyteacher');
         $this->assertNotFalse($pos);
         $this->assertStringContainsString('bg-gray-50', substr($content, max(0, $pos - 400), 400));
     }
@@ -210,44 +213,40 @@ class GuardianBookingFlowTest extends TestCase
         $response->assertDontSee('10:00');
     }
 
-    public function test_a_past_time_slot_today_is_shown_as_unavailable_not_bookable(): void
+    public function test_todays_date_never_appears_in_the_date_picker_even_with_an_unpassed_slot(): void
     {
-        $this->travelTo(Carbon::parse('2026-09-15 12:00:00'));
+        $this->travelTo(Carbon::parse('2026-09-15 08:00:00'));
 
         $guardian = User::factory()->guardian()->create();
         $teacher = User::factory()->teacher()->create();
         $availability = Availability::factory()->for($teacher, 'teacher')->create(['date' => today()->toDateString()]);
 
-        $pastSlot = AppointmentSlot::factory()->create([
+        // 20:00 hasn't happened yet relative to the 08:00 "now" above, but
+        // same-day bookings are closed regardless of time of day.
+        AppointmentSlot::factory()->create([
             'teacher_id' => $teacher->id,
             'availability_id' => $availability->id,
             'date' => today()->toDateString(),
-            'start_time' => '09:00:00',
-            'end_time' => '09:05:00',
-            'status' => SlotStatus::Available,
-        ]);
-        $futureSlot = AppointmentSlot::factory()->create([
-            'teacher_id' => $teacher->id,
-            'availability_id' => $availability->id,
-            'date' => today()->toDateString(),
-            'start_time' => '15:00:00',
-            'end_time' => '15:05:00',
+            'start_time' => '20:00:00',
+            'end_time' => '20:05:00',
             'status' => SlotStatus::Available,
         ]);
 
+        // Explicitly requesting today's date falls back to "no dates open"
+        // rather than showing it, since there's nothing else to fall back to.
         $response = $this->actingAs($guardian)->get(route('guardian.book.date', [
             'teacher' => $teacher,
             'date' => today()->toDateString(),
         ]));
 
         $response->assertOk();
-        $response->assertSee(route('guardian.book.confirm', ['teacher' => $teacher, 'slot' => $futureSlot]), false);
-        $response->assertDontSee(route('guardian.book.confirm', ['teacher' => $teacher, 'slot' => $pastSlot]), false);
+        $response->assertSee('δεν έχει ανοίξει διαθέσιμες ημερομηνίες', false);
+        $response->assertDontSee('20:00');
     }
 
-    public function test_visiting_fresh_skips_today_when_all_of_todays_slots_have_already_passed(): void
+    public function test_visiting_fresh_skips_today_and_lands_on_tomorrow_even_when_todays_slot_time_has_not_passed(): void
     {
-        $this->travelTo(Carbon::parse('2026-09-15 20:00:00'));
+        $this->travelTo(Carbon::parse('2026-09-15 08:00:00'));
 
         $guardian = User::factory()->guardian()->create();
         $teacher = User::factory()->teacher()->create();
@@ -257,8 +256,8 @@ class GuardianBookingFlowTest extends TestCase
             'teacher_id' => $teacher->id,
             'availability_id' => $todayAvailability->id,
             'date' => today()->toDateString(),
-            'start_time' => '09:00:00',
-            'end_time' => '09:05:00',
+            'start_time' => '20:00:00',
+            'end_time' => '20:05:00',
             'status' => SlotStatus::Available,
         ]);
 
@@ -272,15 +271,16 @@ class GuardianBookingFlowTest extends TestCase
             'status' => SlotStatus::Available,
         ]);
 
-        // Nothing left today, so the nearest-date auto-select should skip
-        // straight to tomorrow rather than landing on a dead-end "today"
-        // with everything already crossed out.
+        // Today is never bookable, so the nearest-date auto-select should
+        // skip straight to tomorrow rather than landing on a dead-end
+        // "today" with everything crossed out.
         $response = $this->actingAs($guardian)->get(route('guardian.book.date', [
             'teacher' => $teacher,
         ]));
 
         $response->assertOk();
         $response->assertSee('10:00');
+        $response->assertDontSee('20:00');
     }
 
     public function test_requesting_a_date_not_in_the_available_list_falls_back_to_the_nearest(): void
@@ -361,6 +361,27 @@ class GuardianBookingFlowTest extends TestCase
             'status' => AppointmentStatus::New->value,
         ]);
         $this->assertSame(SlotStatus::Booked, $slot->fresh()->status);
+    }
+
+    public function test_booking_stores_a_clean_date_without_a_spurious_time_suffix(): void
+    {
+        // Assigning a Carbon date object (rather than an explicit
+        // ->toDateString() string) to a 'date:Y-m-d'-cast attribute still
+        // writes it through the connection's full datetime format, which
+        // silently breaks any later exact-match date query (e.g. the
+        // teacher dashboard's "today" list). Guards the fix in
+        // BookingService::book().
+        $guardian = User::factory()->guardian()->create();
+        $child = Child::factory()->for($guardian, 'guardian')->create();
+        $slot = $this->makeSlot();
+
+        $this->actingAs($guardian)->post(route('guardian.book.store', [
+            'teacher' => $slot->teacher,
+            'slot' => $slot,
+        ]), ['child_id' => $child->id]);
+
+        $rawDate = \DB::table('appointments')->where('slot_id', $slot->id)->value('date');
+        $this->assertSame($slot->date->toDateString(), $rawDate);
     }
 
     public function test_a_successful_booking_shows_a_confirmation_message_on_the_dashboard(): void
@@ -476,6 +497,31 @@ class GuardianBookingFlowTest extends TestCase
         $response->assertSee('μόλις κλείστηκε από άλλον χρήστη');
     }
 
+    public function test_guardian_cannot_reach_confirm_page_for_a_same_day_slot(): void
+    {
+        $this->travelTo(Carbon::parse('2026-09-15 08:00:00'));
+
+        $teacher = User::factory()->teacher()->create();
+        $guardian = User::factory()->guardian()->create();
+
+        $availability = Availability::factory()->for($teacher, 'teacher')->create([
+            'date' => today()->toDateString(),
+        ]);
+        $slot = AppointmentSlot::factory()->create([
+            'teacher_id' => $teacher->id,
+            'availability_id' => $availability->id,
+            'date' => $availability->date->toDateString(),
+            'start_time' => '20:00:00',
+            'end_time' => '20:05:00',
+            'status' => SlotStatus::Available,
+        ]);
+
+        $this->actingAs($guardian)->get(route('guardian.book.confirm', [
+            'teacher' => $teacher,
+            'slot' => $slot,
+        ]))->assertNotFound();
+    }
+
     public function test_guardian_cannot_book_a_disabled_slot(): void
     {
         $guardian = User::factory()->guardian()->create();
@@ -513,6 +559,38 @@ class GuardianBookingFlowTest extends TestCase
         ]), ['child_id' => $child->id]);
 
         $response->assertSessionHasErrors('slot');
+    }
+
+    public function test_guardian_cannot_book_a_same_day_slot_even_if_its_time_has_not_passed_yet(): void
+    {
+        $this->travelTo(Carbon::parse('2026-09-15 08:00:00'));
+
+        $teacher = User::factory()->teacher()->create();
+        $guardian = User::factory()->guardian()->create();
+        $child = Child::factory()->for($guardian, 'guardian')->create();
+
+        $availability = Availability::factory()->for($teacher, 'teacher')->create([
+            'date' => today()->toDateString(),
+        ]);
+        $slot = AppointmentSlot::factory()->create([
+            'teacher_id' => $teacher->id,
+            'availability_id' => $availability->id,
+            'date' => $availability->date->toDateString(),
+            'start_time' => '20:00:00',
+            'end_time' => '20:05:00',
+            'status' => SlotStatus::Available,
+        ]);
+
+        // Bypasses the UI entirely (which already hides this slot) to prove
+        // the same-day cutoff is also enforced server-side, not just in the
+        // date picker's rendering.
+        $response = $this->actingAs($guardian)->post(route('guardian.book.store', [
+            'teacher' => $teacher,
+            'slot' => $slot,
+        ]), ['child_id' => $child->id]);
+
+        $response->assertSessionHasErrors('slot');
+        $this->assertSame(0, Appointment::where('slot_id', $slot->id)->count());
     }
 
     public function test_duplicate_booking_attempt_on_same_slot_fails_gracefully(): void

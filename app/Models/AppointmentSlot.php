@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Enums\SlotStatus;
-use Carbon\Carbon;
 use Database\Factories\AppointmentSlotFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -64,15 +63,20 @@ class AppointmentSlot extends Model
     }
 
     /**
-     * Whether this slot's start time has already gone by. A slot's stored
+     * Whether this slot is past the booking cutoff. A slot's stored
      * `status` doesn't change on its own as the clock passes it — this is
      * the "is it actually still bookable right now" check the booking flow
-     * uses to hide/gray out today's already-past slots instead of letting a
-     * guardian click one only to be told it can't be booked.
+     * uses to hide/gray out slots instead of letting a guardian click one
+     * only to be told it can't be booked.
+     *
+     * Bookings close at midnight the night before the appointment date, so
+     * a slot stops being bookable the moment its own day begins — not just
+     * once its specific start time has gone by — so the teacher sees the
+     * full day's bookings as settled first thing in the morning.
      */
-    public function hasPassed(): bool
+    public function isPastBookingCutoff(): bool
     {
-        return Carbon::parse("{$this->date->toDateString()} {$this->start_time}")->isPast();
+        return ! $this->date->isAfter(today());
     }
 
     /**
@@ -80,6 +84,6 @@ class AppointmentSlot extends Model
      */
     public function isBookable(): bool
     {
-        return $this->status === SlotStatus::Available && ! $this->hasPassed();
+        return $this->status === SlotStatus::Available && ! $this->isPastBookingCutoff();
     }
 }
