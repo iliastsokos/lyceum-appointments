@@ -1,10 +1,19 @@
-<div x-data="{ count: {{ $unreadCount }} }"
-     x-init="setInterval(() => {
-        fetch('{{ route('notifications.unread-count') }}')
-            .then(res => res.json())
-            .then(data => { count = data.count; })
-            .catch(() => {});
-     }, 30000)">
+{{-- Polls every 2 minutes, only while the tab is visible, and stops for
+     good after the first failed request so a broken server isn't hammered
+     by every open page (each failure also writes a full trace to the log). --}}
+<div x-data="{
+        count: {{ $unreadCount }},
+        timer: null,
+        poll() {
+            if (document.hidden || ! this.timer) return;
+            fetch('{{ route('notifications.unread-count') }}', { headers: { Accept: 'application/json' } })
+                .then(res => { if (! res.ok) throw new Error(res.status); return res.json(); })
+                .then(data => { this.count = data.count; })
+                .catch(() => { clearInterval(this.timer); this.timer = null; });
+        },
+     }"
+     x-init="timer = setInterval(() => poll(), 120000);
+             document.addEventListener('visibilitychange', () => poll())">
     <x-dropdown align="right" width="w-80">
         <x-slot name="trigger">
             <button class="relative inline-flex items-center p-2 rounded-md text-white focus:outline-none focus:ring-2 focus:ring-secondary focus:ring-offset-2 focus:ring-offset-primary transition ease-in-out duration-150" aria-label="{{ __('Ειδοποιήσεις') }}">
